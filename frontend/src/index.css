@@ -1,0 +1,64 @@
+/* 1. Google Fonts Imports (Must be at the absolute top of the file) */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@400;500;600;700&display=swap');
+
+/* 2. Tailwind Framework Core */
+@import "tailwindcss";
+
+/* 3. Configure manual dark mode toggling via the .dark class */
+@variant dark (&:where(.dark, .dark *));
+
+/* 4. Tailwind v4 Theme Configuration */
+@theme {
+  /* Registers your elegant heading font: use 'font-playfair' */
+  --font-playfair: "Playfair Display", serif;
+  
+  /* Registers your ultra-clean body font: use 'font-sans' */
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  
+  /* Custom brand green color */
+  --color-brand-green: #166534;
+}
+
+/* 5. Base System Adjustments */
+:root {
+  color-scheme: light;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+*, *::before, *::after {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #a1a1aa transparent;
+}
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: #a1a1aa;
+  border-radius: 9999px;
+}
+.dark .scrollbar-thin {
+  scrollbar-color: #3f3f46 transparent;
+}
+.dark .scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: #3f3f46;
+}
+
+

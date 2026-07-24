@@ -1,0 +1,11 @@
+{
+  "totalRequests": 47814,
+  "avgDuration": 2.24329474630864,
+  "p95Duration": 2.084809999999999,
+  "p99Duration": 0,
+  "maxDuration": 519.6037,
+  "httpErrors": 0.9614548040322918,
+  "loginSuccessRate": 0.010643959552953698,
+  "apiErrorRate": 0,
+  "vusMax": 500
+}
