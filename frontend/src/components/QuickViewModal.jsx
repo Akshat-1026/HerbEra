@@ -23,6 +23,7 @@ import { useCart } from "../hook/CartHook";
 import { useWishlist } from "../context/WishlistContext";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
+import { useCurrency } from "../context/CurrencyContext";
 
 export default function QuickViewModal({ product, isOpen, onClose }) {
   const [qty, setQty] = useState(1);
@@ -33,6 +34,7 @@ export default function QuickViewModal({ product, isOpen, onClose }) {
   const { addToCart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { t } = useTranslation();
+  const { formatPrice } = useCurrency();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -107,7 +109,7 @@ export default function QuickViewModal({ product, isOpen, onClose }) {
           {/* Close Button — sticky so always visible */}
           <button
             onClick={onClose}
-            className="sticky top-0 right-0 z-50 ml-auto mr-4 mt-4 flex h-9 w-9 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 shadow-md transition hover:bg-red-50 hover:text-red-500 hover:rotate-90 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-red-900/30 dark:hover:text-red-400"
+            className="sticky top-0 right-0 z-50 ml-auto mr-4 mt-4 flex h-11 w-11 items-center justify-center rounded-full bg-zinc-100 text-zinc-500 shadow-md transition hover:bg-red-50 hover:text-red-500 hover:rotate-90 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-red-900/30 dark:hover:text-red-400"
           >
             <X size={18} />
           </button>
@@ -162,13 +164,13 @@ export default function QuickViewModal({ product, isOpen, onClose }) {
                     <>
                       <button
                         onClick={() => setSelectedImage((p) => (p === 0 ? displayImages.length - 1 : p - 1))}
-                        className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 shadow-md backdrop-blur-sm transition hover:bg-white dark:bg-zinc-800/80 dark:hover:bg-zinc-800"
+                        className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-3 shadow-md backdrop-blur-sm transition hover:bg-white dark:bg-zinc-800/80 dark:hover:bg-zinc-800 min-h-[44px] min-w-[44px] flex items-center justify-center"
                       >
                         <ChevronLeft size={16} />
                       </button>
                       <button
                         onClick={() => setSelectedImage((p) => (p === displayImages.length - 1 ? 0 : p + 1))}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2 shadow-md backdrop-blur-sm transition hover:bg-white dark:bg-zinc-800/80 dark:hover:bg-zinc-800"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-3 shadow-md backdrop-blur-sm transition hover:bg-white dark:bg-zinc-800/80 dark:hover:bg-zinc-800 min-h-[44px] min-w-[44px] flex items-center justify-center"
                       >
                         <ChevronRight size={16} />
                       </button>
@@ -231,10 +233,10 @@ export default function QuickViewModal({ product, isOpen, onClose }) {
 
                 {/* Price */}
                 <div className="flex items-baseline gap-3">
-                  <span className="text-3xl font-black text-zinc-900 dark:text-white">₹{currentPrice}</span>
+                  <span className="text-3xl font-black text-zinc-900 dark:text-white">{formatPrice(currentPrice)}</span>
                   {discountPercent > 0 && (
                     <>
-                      <span className="text-lg text-zinc-400 line-through">₹{originalPrice}</span>
+                      <span className="text-lg text-zinc-400 line-through">{formatPrice(originalPrice)}</span>
                       <span className="rounded-lg bg-red-100 px-2.5 py-1 text-xs font-bold text-red-600 dark:bg-red-900/30 dark:text-red-400">
                         {discountPercent}% OFF
                       </span>
@@ -262,7 +264,7 @@ export default function QuickViewModal({ product, isOpen, onClose }) {
                               : "border-zinc-200 text-zinc-600 hover:border-zinc-300 dark:border-zinc-700 dark:text-zinc-400"
                           }`}
                         >
-                          {v.label} — ₹{v.price}
+                          {v.label} — {formatPrice(v.price)}
                         </button>
                       ))}
                     </div>

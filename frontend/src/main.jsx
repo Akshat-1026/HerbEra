@@ -14,6 +14,7 @@ import { OrderProvider } from "./hook/Orderhook";
 import { AdminProvider } from "./context/AdminContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { CompareProvider } from "./context/CompareContext";
+import { CurrencyProvider } from "./context/CurrencyContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
@@ -28,7 +29,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                   <AdminProvider>
                     <ThemeProvider>
                       <CompareProvider>
-                        <App />
+                        <CurrencyProvider>
+                          <App />
+                        </CurrencyProvider>
                       </CompareProvider>
                     </ThemeProvider>
                   </AdminProvider>

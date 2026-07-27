@@ -8,6 +8,7 @@ import SEO from "../components/SEO";
 import { CreditCard, MapPin, Tag, X } from "lucide-react";
 import { useCoupon } from "../context/CouponContext";
 import { AuthContext } from "../context/AuthContext";
+import { useCurrency } from "../context/CurrencyContext";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const RAZORPAY_KEY = import.meta.env.VITE_RAZORPAY_KEY_ID || "";
@@ -16,6 +17,7 @@ function Checkout() {
   const { t } = useTranslation();
   const { cart, totalPrice, clearCart } = useCart();
   const { discount, couponCode, applyCoupon, removeCoupon, validating } = useCoupon();
+  const { formatPrice } = useCurrency();
   const navigate = useNavigate();
   const { userInfo } = useContext(AuthContext);
 
@@ -266,32 +268,32 @@ function Checkout() {
                         {item.selectedVariant?.label && <p className="text-[11px] text-zinc-400">{item.selectedVariant.label}</p>}
                         <p className="text-xs text-zinc-500">{t("cart.qty")}: {item.qty}</p>
                       </div>
-                      <p className="text-sm font-semibold">₹{(item.price * item.qty).toLocaleString("en-IN")}</p>
+                      <p className="text-sm font-semibold">{formatPrice(item.price * item.qty)}</p>
                     </div>
                   ))}
                 </div>
                 <div className="border-t border-zinc-200 dark:border-zinc-700 pt-4 space-y-2">
                   <div className="flex justify-between text-sm text-zinc-600 dark:text-zinc-400">
                     <span>{t("checkout.subtotal")}</span>
-                    <span>₹{subtotal?.toLocaleString("en-IN")}</span>
+                    <span>{formatPrice(subtotal)}</span>
                   </div>
                   {couponCode && discount > 0 && (
                     <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
                       <span>{t("cart.discount", { code: couponCode })}</span>
-                      <span>-₹{couponDiscountValue.toFixed(0)}</span>
+                      <span>-{formatPrice(couponDiscountValue)}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-sm text-zinc-600 dark:text-zinc-400">
                     <span>{t("checkout.shipping")}</span>
-                    <span>{shipping === 0 ? t("checkout.free") : `₹${shipping}`}</span>
+                    <span>{shipping === 0 ? t("checkout.free") : formatPrice(shipping)}</span>
                   </div>
                   <div className="flex justify-between text-sm text-zinc-600 dark:text-zinc-400">
                     <span>GST (5%)</span>
-                    <span>₹{gst.toFixed(0)}</span>
+                    <span>{formatPrice(gst)}</span>
                   </div>
                   <div className="flex justify-between text-lg font-bold pt-2 border-t border-zinc-200 dark:border-zinc-700">
                     <span>{t("checkout.total")}</span>
-                    <span className="text-green-600">₹{finalTotal.toLocaleString("en-IN")}</span>
+                    <span className="text-green-600">{formatPrice(finalTotal)}</span>
                   </div>
                 </div>
 
@@ -339,7 +341,7 @@ function Checkout() {
                       {t("checkout.processing")}
                     </span>
                   ) : (
-                    `${t("checkout.placeOrder")} ₹${finalTotal.toLocaleString("en-IN")}`
+                    `${t("checkout.placeOrder")} ${formatPrice(finalTotal)}`
                   )}
                 </button>
               </div>

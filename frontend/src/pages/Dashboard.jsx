@@ -7,6 +7,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import SEO from "../components/SEO";
+import { useCurrency } from "../context/CurrencyContext";
 
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
@@ -16,6 +17,7 @@ const fadeUp = (delay = 0) => ({
 });
 
 function Dashboard() {
+  const { formatPrice } = useCurrency();
   const { userInfo, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("profile");
@@ -280,7 +282,7 @@ function Dashboard() {
                         }`}>
                           {order.isDelivered ? t("dashboard.delivered") : order.status === "cancelled" ? t("dashboard.cancelled") : t("dashboard.processing")}
                         </span>
-                        <span className="font-bold text-lg">₹{order.totalPrice?.toLocaleString()}</span>
+                        <span className="font-bold text-lg">{formatPrice(order.totalPrice)}</span>
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-3">

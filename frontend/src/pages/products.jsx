@@ -8,8 +8,10 @@ import { toast } from "react-toastify";
 import ProductCard from "../components/ProductCard";
 import QuickViewModal from "../components/QuickViewModal";
 import SEO from "../components/SEO";
+import { useCurrency } from "../context/CurrencyContext";
 
 export default function Products() {
+  const { formatPrice } = useCurrency();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -197,7 +199,7 @@ export default function Products() {
     <div className="relative min-h-screen text-[#1f3a2f] dark:text-white">
       {/* Full-page background */}
       <div className="fixed inset-0 z-0">
-        <img src="/images/shop.jpg" alt="" className="h-full w-full object-cover" />
+        <img src="/images/shop.webp" alt="" className="h-full w-full object-cover" />
         <div className="absolute inset-0 bg-[#f8f5ef]/10 dark:bg-[#0d0d0d]/10" />
       </div>
 
@@ -218,7 +220,7 @@ export default function Products() {
         <motion.h1
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="font-serif text-5xl md:text-6xl text-emerald-950 drop-shadow-[0_2px_4px_rgba(255,255,255,0.3)]"
+          className="font-serif text-3xl sm:text-5xl md:text-6xl text-emerald-950 drop-shadow-[0_2px_4px_rgba(255,255,255,0.3)]"
         >
           {t("products.heading")}
         </motion.h1>
@@ -378,7 +380,7 @@ export default function Products() {
                           <p className="mt-0.5 text-xs text-zinc-400 dark:text-zinc-500">
                             {p.category || "Herbal"}
                             {p.price != null && (
-                              <span className="ml-2 font-medium text-zinc-600 dark:text-zinc-300">₹{p.price.toLocaleString()}</span>
+                              <span className="ml-2 font-medium text-zinc-600 dark:text-zinc-300">{formatPrice(p.price)}</span>
                             )}
                             {p.rating > 0 && (
                               <span className="ml-2 inline-flex items-center gap-0.5 font-medium text-amber-500">

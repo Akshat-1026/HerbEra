@@ -3,10 +3,12 @@ import { Heart, ShoppingCart, Star, Eye, Zap, Scale } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
+import { useCurrency } from "../context/CurrencyContext";
 import { useCart } from "../hook/CartHook";
 import { useWishlist } from "../context/WishlistContext";
 import { useCompare } from "../context/CompareContext";
 import { useTranslation } from "react-i18next";
+import useProductTranslation from "../hook/useProductTranslation";
 
 const stagger = (i = 0, d = 0.07) => ({
   initial: { opacity: 0, y: 20 },
@@ -50,6 +52,8 @@ function ProductCard({
   const { addToCart, cart } = useCart();
   const { toggleWishlist, isInWishlist } = useWishlist();
   const { t } = useTranslation();
+  const tp = useProductTranslation(product);
+  const { formatPrice } = useCurrency();
   const isWishlisted = isInWishlist(product._id);
   const hasVariants = product.variants?.length > 0;
   const [selectedVariant, setSelectedVariant] = useState(hasVariants ? product.variants[0] : null);
@@ -124,7 +128,7 @@ function ProductCard({
 
         <button
           onClick={handleCompare}
-          className="absolute right-10 top-2 z-10 rounded-full bg-white/80 p-1.5 shadow-sm backdrop-blur-sm transition hover:bg-white dark:bg-zinc-800/80 dark:hover:bg-zinc-800"
+          className="absolute right-10 top-2 z-10 rounded-full bg-white/80 p-2.5 shadow-sm backdrop-blur-sm transition hover:bg-white dark:bg-zinc-800/80 dark:hover:bg-zinc-800 min-h-[44px] min-w-[44px] flex items-center justify-center"
           title={inCompare ? "Remove from compare" : "Add to compare"}
         >
           <Scale
@@ -135,7 +139,7 @@ function ProductCard({
 
         <button
           onClick={handleWishlist}
-          className="absolute right-2 top-2 z-10 rounded-full bg-white/80 p-1.5 shadow-sm backdrop-blur-sm transition hover:bg-white dark:bg-zinc-800/80 dark:hover:bg-zinc-800"
+          className="absolute right-2 top-2 z-10 rounded-full bg-white/80 p-2.5 shadow-sm backdrop-blur-sm transition hover:bg-white dark:bg-zinc-800/80 dark:hover:bg-zinc-800 min-h-[44px] min-w-[44px] flex items-center justify-center"
         >
           <Heart
             size={15}
@@ -185,7 +189,7 @@ function ProductCard({
 
         {/* Name */}
         <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-zinc-900 group-hover:text-emerald-700 dark:text-zinc-100 dark:group-hover:text-emerald-400">
-          {product.name}
+          {tp.name}
           {discountPercent > 0 && (
             <span className="ml-1.5 inline-block rounded-sm bg-red-500 px-1.5 py-0.5 text-[10px] font-bold uppercase leading-none text-white">
               {discountPercent}% OFF
@@ -201,7 +205,7 @@ function ProductCard({
         {/* Description */}
         {showDescription && (
           <p className="line-clamp-2 text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
-            {product.description}
+            {tp.description}
           </p>
         )}
 
@@ -211,26 +215,26 @@ function ProductCard({
             {selectedVariant ? (
               <>
                 <span className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
-                  ₹{selectedVariant.price}
+                  {formatPrice(selectedVariant.price)}
                 </span>
                 {selectedVariant.originalPrice > 0 && (
                   <span className="text-xs text-zinc-400 line-through dark:text-zinc-500">
-                    ₹{selectedVariant.originalPrice}
+                    {formatPrice(selectedVariant.originalPrice)}
                   </span>
                 )}
               </>
             ) : hasVariants ? (
               <span className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
-                ₹{Math.min(...product.variants.map(v => v.price))} – ₹{Math.max(...product.variants.map(v => v.price))}
+                {formatPrice(Math.min(...product.variants.map(v => v.price)))} – {formatPrice(Math.max(...product.variants.map(v => v.price)))}
               </span>
             ) : (
               <>
                 <span className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
-                  ₹{product.price}
+                  {formatPrice(product.price)}
                 </span>
                 {product.originalPrice > 0 && (
                   <span className="text-xs text-zinc-400 line-through dark:text-zinc-500">
-                    ₹{product.originalPrice}
+                    {formatPrice(product.originalPrice)}
                   </span>
                 )}
               </>
@@ -267,7 +271,7 @@ function ProductCard({
               addToCart(payload);
               navigate("/checkout");
             }}
-            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-semibold transition ${
+            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-3 text-xs font-semibold transition ${
               inStock
                 ? "bg-[#2d5c49] text-white hover:bg-[#1a362b] active:scale-[0.97]"
                 : "cursor-not-allowed bg-zinc-200 text-zinc-400 dark:bg-zinc-800 dark:text-zinc-500"

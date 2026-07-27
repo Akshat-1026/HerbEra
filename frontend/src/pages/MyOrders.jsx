@@ -6,6 +6,7 @@ import { Package, Clock, MapPin, ChevronDown, ChevronUp, ShoppingBag, Calendar, 
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
+import { useCurrency } from "../context/CurrencyContext";
 import SEO from "../components/SEO";
 
 const fadeUp = (delay = 0) => ({
@@ -18,6 +19,7 @@ const fadeUp = (delay = 0) => ({
 function MyOrders() {
   const { t } = useTranslation();
   const { userInfo } = useContext(AuthContext);
+  const { formatPrice } = useCurrency();
   const statusFilters = ["All", "Processing", "Shipped", "Delivered", "Cancelled"];
   const statusConfig = {
     pending: { label: t("myOrders.pending"), color: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300", icon: Clock },
@@ -169,7 +171,7 @@ function MyOrders() {
                                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${status.color}`}>
                                   {status.label}
                                 </span>
-                                <span className="font-bold text-lg">₹{order.totalPrice?.toLocaleString("en-IN")}</span>
+                                <span className="font-bold text-lg">{formatPrice(order.totalPrice)}</span>
                               </div>
                             </div>
 
@@ -192,7 +194,7 @@ function MyOrders() {
                                   <div className="min-w-0">
                                     <p className="text-sm font-medium truncate max-w-[120px] md:max-w-[200px]">{item.name}</p>
                                     {item.variantLabel && <p className="text-[11px] text-zinc-400">{item.variantLabel}</p>}
-                                    <p className="text-xs text-zinc-500">x{item.qty} — ₹{(item.price * item.qty).toLocaleString("en-IN")}</p>
+                                    <p className="text-xs text-zinc-500">x{item.qty} — {formatPrice(item.price * item.qty)}</p>
                                   </div>
                                 </div>
                               ))}

@@ -36,7 +36,7 @@ export default function About() {
       <SEO title={t("about.pageTitle")} />
       <div className="min-h-screen bg-[#fdfaf6] text-[#1b3b2f] dark:bg-[#0d0d0d] dark:text-white font-inter transition-colors duration-500">
         {/* Main Story Section */}
-        <section className="flex flex-col md:flex-row items-center justify-between px-10 py-20 gap-10">
+        <section className="flex flex-col md:flex-row items-center justify-between px-6 md:px-10 py-12 md:py-20 gap-10">
           {/* Text Content */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
@@ -47,7 +47,7 @@ export default function About() {
             <p className="uppercase text-xs tracking-widest text-[#1b3b2f]/70 dark:text-gray-400 mb-2">
               {sectionLabel}
             </p>
-            <h1 className="text-4xl font-serif mb-6 leading-snug dark:text-white">
+            <h1 className="text-3xl md:text-4xl font-serif mb-6 leading-snug dark:text-white">
               {heading}
             </h1>
             {description && (
@@ -80,16 +80,16 @@ export default function About() {
               alt={imageAlt}
               loading="lazy"
               decoding="async"
-              className="w-[400px] h-[480px] object-cover rounded-2xl shadow-lg dark:shadow-green-900/40 transition-shadow duration-500"
+              className="w-full max-w-[400px] h-[320px] md:h-[480px] object-cover rounded-2xl shadow-lg dark:shadow-green-900/40 transition-shadow duration-500"
             />
           </motion.div>
         </section>
 
         {/* Divider */}
-        <div className="border-t border-[#e5e2da] dark:border-gray-700 mx-10 mb-10 transition-colors duration-500"></div>
+        <div className="border-t border-[#e5e2da] dark:border-gray-700 mx-6 md:mx-10 mb-10 transition-colors duration-500"></div>
 
         {/* Philosophy Highlights */}
-        <section className="px-10 pb-20 grid md:grid-cols-3 gap-8 text-center">
+        <section className="px-6 md:px-10 pb-12 md:pb-20 grid md:grid-cols-3 gap-4 md:gap-8 text-center">
           {philosophy.map((item, i) => (
             <div key={i} className="bg-white dark:bg-[#161616] rounded-2xl p-6 shadow-md dark:shadow-lg transition-all duration-500">
               <h3 className="font-serif text-lg mb-2 dark:text-green-400">{item.title}</h3>

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import SEO from "../components/SEO";
+import { useCurrency } from "../context/CurrencyContext";
 
 function CheckCircle({ size, className }) {
   return (
@@ -55,6 +56,7 @@ function formatDate(date) {
 }
 
 function TrackOrder() {
+  const { formatPrice } = useCurrency();
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const [trackingNumber, setTrackingNumber] = useState(searchParams.get("tracking") || "");
@@ -127,12 +129,12 @@ function TrackOrder() {
 
     <>
     <SEO title={t("trackOrder.pageTitle")} />
-    <div className="min-h-screen bg-[#f8f5ef] dark:bg-zinc-950 px-6 py-16">
+    <div className="min-h-screen bg-[#f8f5ef] dark:bg-zinc-950 px-6 py-12 md:py-16">
       <div className="mx-auto max-w-3xl">
 
         <div className="mb-10 text-center">
           <PackageSearch className="mx-auto text-green-600 dark:text-green-400" size={48} strokeWidth={1.5} />
-          <h1 className="mt-4 text-4xl font-bold text-zinc-800 dark:text-white font-playfair">
+          <h1 className="mt-4 text-3xl sm:text-4xl font-bold text-zinc-800 dark:text-white font-playfair">
             {t("trackOrder.heading")}
           </h1>
           <p className="mt-2 text-zinc-500 dark:text-zinc-400">
@@ -175,7 +177,7 @@ function TrackOrder() {
             className="mt-10 space-y-6"
           >
 
-            <div className="rounded-3xl bg-white dark:bg-zinc-900 shadow-md p-8">
+            <div className="rounded-3xl bg-white dark:bg-zinc-900 shadow-md p-5 md:p-8">
               <h2 className="text-lg font-semibold text-zinc-800 dark:text-white mb-6">
                 {t("trackOrder.orderJourney")}
               </h2>
@@ -264,7 +266,7 @@ function TrackOrder() {
               )}
             </div>
 
-            <div className="rounded-3xl bg-white dark:bg-zinc-900 shadow-md p-8">
+            <div className="rounded-3xl bg-white dark:bg-zinc-900 shadow-md p-5 md:p-8">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-semibold text-zinc-800 dark:text-white">
                   {t("trackOrder.orderDetails")}
@@ -308,7 +310,7 @@ function TrackOrder() {
                     <IndianRupee size={12} /> {t("trackOrder.total")}
                   </p>
                   <p className="text-lg font-bold text-green-600 dark:text-green-400 mt-1">
-                    ₹{order.totalPrice}
+                    {formatPrice(order.totalPrice)}
                   </p>
                 </div>
                 <div>
@@ -352,7 +354,7 @@ function TrackOrder() {
                           </p>
                         </div>
                         <p className="text-sm font-semibold text-zinc-800 dark:text-white">
-                          ₹{item.price}
+                          {formatPrice(item.price)}
                         </p>
                       </div>
                     ))}
@@ -389,7 +391,7 @@ function TrackOrder() {
                           </p>
                         </div>
                         <p className="text-sm font-semibold text-zinc-800 dark:text-white">
-                          ₹{item.price}
+                          {formatPrice(item.price)}
                         </p>
                       </div>
                     ))}
@@ -478,7 +480,7 @@ function TrackOrder() {
             <p className="text-sm text-zinc-500 dark:text-zinc-400 text-center mb-6">
               {t("trackOrder.cancelModalDesc")}
             </p>
-            <div className="flex gap-3">
+        <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={() => setShowCancelConfirm(false)}
                 disabled={cancelling}

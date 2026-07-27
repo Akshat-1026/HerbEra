@@ -18,7 +18,7 @@ function AnnouncementBar() {
   }, []);
 
   return (
-    <div className="relative z-10 h-[48px] w-full overflow-hidden bg-[#0D1210] sm:h-[52px] lg:h-[56px]">
+    <div className="relative z-10 h-[32px] w-full overflow-hidden bg-[#0D1210] sm:h-[34px] lg:h-[36px]">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <motion.div
           className="absolute left-1/4 top-1/3 h-24 w-24 rounded-full bg-[#5F8F63]/10 blur-3xl"
@@ -65,10 +65,10 @@ function AnnouncementBar() {
       </div>
 
       <div className="relative z-10 flex h-full flex-row items-center justify-center gap-4 px-5 text-center">
-        <h2 className="text-[13px] font-bold tracking-[0.2px] text-white lg:text-[14px]">
+        <h2 className="text-[11px] font-bold tracking-[0.2px] text-white lg:text-[12px]">
           {data?.title}
         </h2>
-        <p className="text-[12px] font-medium leading-[1.4] text-white/88 lg:text-[13px]">
+        <p className="text-[10px] font-medium leading-[1.4] text-white/88 lg:text-[11px]">
           {data?.description}
         </p>
       </div>

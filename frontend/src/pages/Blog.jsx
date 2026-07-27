@@ -69,7 +69,7 @@ function Blog() {
         <motion.p {...fadeUp(0)} className="mb-3 text-sm uppercase tracking-[5px] text-[#557c6c] dark:text-green-400">
           {t("blog.sectionLabel")}
         </motion.p>
-        <motion.h1 {...fadeUp(0.1)} className="text-5xl font-bold text-zinc-800 dark:text-white font-serif">
+        <motion.h1 {...fadeUp(0.1)} className="text-3xl sm:text-5xl font-bold text-zinc-800 dark:text-white font-serif">
           {t("blog.heading")}
         </motion.h1>
         <motion.p {...fadeUp(0.2)} className="text-zinc-600 dark:text-zinc-300 mt-4 max-w-2xl mx-auto">

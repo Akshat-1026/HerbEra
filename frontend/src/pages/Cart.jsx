@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { toast } from "react-toastify";
 import { useCart } from "../hook/CartHook";
 import { useCoupon } from "../context/CouponContext";
+import { useCurrency } from "../context/CurrencyContext";
 import SEO from "../components/SEO";
 
 const fadeUp = (delay = 0) => ({
@@ -35,6 +36,7 @@ function Cart() {
   const { t } = useTranslation();
   const { cart, increaseQty, decreaseQty, removeFromCart, addToCart, totalPrice } = useCart();
   const { discount, couponCode, applyCoupon, removeCoupon } = useCoupon();
+  const { formatPrice } = useCurrency();
 
   const [couponInput, setCouponInput] = useState("");
 
@@ -188,13 +190,13 @@ function Cart() {
                               <p className="text-[10px] font-mono text-zinc-400 dark:text-zinc-500 mt-0.5">SKU: {item.sku}</p>
                             )}
                             <p className="mt-1 font-semibold text-green-600 dark:text-green-400">
-                              ₹{item.price}
+                              {formatPrice(item.price)}
                             </p>
                           </div>
                           <div className="mt-4 flex items-center gap-3">
                             <button
                               onClick={() => decreaseQty(item._cartId)}
-                              className="rounded-xl bg-zinc-100 p-2.5 transition hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700"
+                              className="rounded-xl bg-zinc-100 p-3 min-h-[44px] min-w-[44px] flex items-center justify-center transition hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700"
                             >
                               <Minus size={16} className="text-zinc-600 dark:text-zinc-400" />
                             </button>
@@ -203,7 +205,7 @@ function Cart() {
                             </span>
                             <button
                               onClick={() => increaseQty(item._cartId)}
-                              className="rounded-xl bg-zinc-100 p-2.5 transition hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700"
+                              className="rounded-xl bg-zinc-100 p-3 min-h-[44px] min-w-[44px] flex items-center justify-center transition hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700"
                             >
                               <Plus size={16} className="text-zinc-600 dark:text-zinc-400" />
                             </button>
@@ -211,19 +213,19 @@ function Cart() {
                         </div>
                         <div className="flex flex-row items-center justify-between gap-3 md:flex-col md:items-end md:justify-between">
                           <p className="text-xl font-extrabold text-green-600 dark:text-green-400">
-                            ₹{item.price * item.qty}
+                            {formatPrice(item.price * item.qty)}
                           </p>
                           <div className="flex gap-2">
                             <button
                               onClick={() => saveForLater(item)}
-                              className="rounded-xl border border-zinc-200 p-2.5 text-zinc-400 transition hover:border-green-200 hover:text-green-600 dark:border-zinc-700 dark:hover:border-green-700 dark:hover:text-green-400"
+                              className="rounded-xl border border-zinc-200 p-3 min-h-[44px] min-w-[44px] flex items-center justify-center text-zinc-400 transition hover:border-green-200 hover:text-green-600 dark:border-zinc-700 dark:hover:border-green-700 dark:hover:text-green-400"
                               title={t("cart.saveForLater")}
                             >
                               <Bookmark size={16} />
                             </button>
                             <button
                               onClick={() => { removeFromCart(item._cartId); toast.error(t("cart.removed")); }}
-                              className="rounded-xl border border-zinc-200 p-2.5 text-red-400 transition hover:border-red-200 hover:text-red-600 dark:border-zinc-700 dark:hover:border-red-700 dark:hover:text-red-400"
+                              className="rounded-xl border border-zinc-200 p-3 min-h-[44px] min-w-[44px] flex items-center justify-center text-red-400 transition hover:border-red-200 hover:text-red-600 dark:border-zinc-700 dark:hover:border-red-700 dark:hover:text-red-400"
                               title={t("cart.remove")}
                             >
                               <Trash2 size={16} />
@@ -284,7 +286,7 @@ function Cart() {
                               <p className="text-xs text-zinc-500 dark:text-zinc-400">{item.selectedVariant.label}</p>
                             )}
                             <p className="mt-1 font-semibold text-green-600 dark:text-green-400">
-                              ₹{item.price}
+                              {formatPrice(item.price)}
                             </p>
                           </div>
                           <div className="mt-3 flex items-center gap-2 text-sm text-zinc-400">
@@ -329,13 +331,13 @@ function Cart() {
                     <div className="space-y-4">
                       <div className="flex justify-between text-zinc-600 dark:text-zinc-400">
                         <span>{t("cart.subtotal")}</span>
-                        <span className="font-medium text-zinc-800 dark:text-white">₹{subtotal.toFixed(0)}</span>
+                        <span className="font-medium text-zinc-800 dark:text-white">{formatPrice(subtotal)}</span>
                       </div>
 
                       {couponCode && discount > 0 && (
                         <div className="flex justify-between text-green-600 dark:text-green-400">
                           <span>{t("cart.discount", { code: couponCode })}</span>
-                          <span>-₹{couponDiscountValue.toFixed(0)}</span>
+                          <span>-{formatPrice(couponDiscountValue)}</span>
                         </div>
                       )}
 
@@ -345,13 +347,13 @@ function Cart() {
                           {t("cart.shipping")}
                         </span>
                         <span className={shipping === 0 ? "font-semibold text-green-600 dark:text-green-400" : ""}>
-                          {shipping === 0 ? t("cart.free") : `₹${shipping}`}
+                          {shipping === 0 ? t("cart.free") : formatPrice(shipping)}
                         </span>
                       </div>
 
                       <div className="flex justify-between text-zinc-600 dark:text-zinc-400">
                         <span>{t("cart.gst")}</span>
-                        <span>₹{gst.toFixed(0)}</span>
+                        <span>{formatPrice(gst)}</span>
                       </div>
                     </div>
 
@@ -359,7 +361,7 @@ function Cart() {
 
                     <div className="flex items-center justify-between text-2xl font-bold text-zinc-800 dark:text-white">
                       <span>{t("cart.total")}</span>
-                      <span className="text-green-600 dark:text-green-400">₹{finalTotal.toFixed(0)}</span>
+                      <span className="text-green-600 dark:text-green-400">{formatPrice(finalTotal)}</span>
                     </div>
 
                     <div className="mt-4 flex items-center gap-2 text-sm text-zinc-400">

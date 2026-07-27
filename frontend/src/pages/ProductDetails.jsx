@@ -5,12 +5,17 @@ import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "../hook/CartHook";
 import { useWishlist } from "../context/WishlistContext";
-import { Heart, Star, Truck, ShieldCheck, ArrowRight, ChevronLeft, ChevronRight, CheckCircle, XCircle, Award, BookOpen, FlaskConical, Clock, Send, Loader2, Minus, Plus, ShoppingCart, Zap, PackageCheck, Play } from "lucide-react";
+import { Heart, Star, Truck, ShieldCheck, ArrowRight, ChevronLeft, ChevronRight, CheckCircle, XCircle, Award, BookOpen, FlaskConical, Clock, Send, Loader2, Minus, Plus, ShoppingCart, Zap, PackageCheck, Play, ThumbsUp, Flag, BadgeCheck, ImageIcon, SlidersHorizontal, ChevronDown, X, Camera } from "lucide-react";
 import { useRecentlyViewed } from "../hook/useRecentlyViewed";
 import { toast } from "react-toastify";
 import SEO from "../components/SEO";
 import { AuthContext } from "../context/AuthContext";
 import ImageZoom from "../components/ImageZoom";
+import api from "../services/api";
+import { resizeImage } from "../utils/resizeImage";
+import useProductTranslation from "../hook/useProductTranslation";
+import Picture from "../components/Picture";
+import { useCurrency } from "../context/CurrencyContext";
 
 const SkeletonLoader = () => (
   <div className="min-h-screen bg-zinc-50 px-6 py-16 dark:bg-zinc-950">
@@ -49,8 +54,10 @@ function ProductDetails() {
   const { addToCart } = useCart();
   const { wishlist, addToWishlist, removeFromWishlist } = useWishlist();
   const { isAuthenticated } = useContext(AuthContext);
+  const { formatPrice } = useCurrency();
 
   const [product, setProduct] = useState(null);
+  const tp = useProductTranslation(product);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [quantity, setQuantity] = useState(1);
@@ -62,10 +69,42 @@ function ProductDetails() {
 
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [reviews, setReviews] = useState([]);
+  const [reviewStats, setReviewStats] = useState({ average: 0, total: 0, distribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } });
+  const [reviewSort, setReviewSort] = useState("newest");
+  const [reviewFilter, setReviewFilter] = useState(0);
+  const [reviewPage, setReviewPage] = useState(1);
+  const [reviewTotalPages, setReviewTotalPages] = useState(1);
+  const [loadingReviews, setLoadingReviews] = useState(true);
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState("");
+  const [reviewImages, setReviewImages] = useState([]);
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [editingReview, setEditingReview] = useState(null);
+  const [helpfulLoading, setHelpfulLoading] = useState(null);
   const { addRecentlyViewed } = useRecentlyViewed();
+
+  const fetchReviews = async (productId, page = 1, sort = "newest", ratingFilter = 0, append = false) => {
+    try {
+      setLoadingReviews(true);
+      const params = new URLSearchParams({ page: String(page), limit: "10", sort });
+      if (ratingFilter > 0) params.set("rating", String(ratingFilter));
+      const { data } = await api.get(`/reviews/product/${productId}?${params}`);
+      setReviews((prev) => (append ? [...prev, ...data.reviews] : data.reviews));
+      setReviewTotalPages(data.totalPages || 1);
+      setReviewPage(data.page || 1);
+    } catch {
+      if (!append) setReviews([]);
+    } finally {
+      setLoadingReviews(false);
+    }
+  };
+
+  const fetchStats = async (productId) => {
+    try {
+      const { data } = await api.get(`/reviews/product/${productId}/stats`);
+      setReviewStats(data);
+    } catch { /* ignore */ }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -73,21 +112,15 @@ function ProductDetails() {
     const fetchProductData = async () => {
       try {
         setLoading(true);
-        const [productRes, reviewsRes] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/products/${id}`),
-          axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/reviews/product/${id}`),
-        ]);
+        const productRes = await api.get(`/products/${id}`);
         const data = productRes.data?.data || productRes.data?.product || productRes.data || null;
 
         if (isMounted && data) {
           setProduct(data);
           if (data.variants?.length > 0) setSelectedVariant(data.variants[0]);
-          setReviews(reviewsRes.data || []);
 
           try {
-            const relatedRes = await axios.get(
-              `${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/products/search?sort=newest&limit=5&page=1`
-            );
+            const relatedRes = await api.get(`/products/search?sort=newest&limit=5&page=1`);
             const relatedData = relatedRes.data?.products || relatedRes.data?.data || [];
             setRelatedProducts(relatedData.filter((p) => p._id !== data._id).slice(0, 4));
           } catch {
@@ -107,24 +140,70 @@ function ProductDetails() {
     return () => { isMounted = false; };
   }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    if (!id) return;
+    fetchReviews(id, 1, reviewSort, reviewFilter, false);
+    fetchStats(id);
+  }, [id, reviewSort, reviewFilter]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleSubmitReview = async (e) => {
     e.preventDefault();
     if (!reviewComment.trim()) return;
     setSubmittingReview(true);
     try {
-      const { data } = await axios.post(
-        `${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/reviews/product/${id}`,
-        { rating: reviewRating, comment: reviewComment }
-      );
-      setReviews((prev) => [data, ...prev]);
+      const payload = { rating: reviewRating, comment: reviewComment, images: reviewImages };
+      if (editingReview) {
+        await api.put(`/reviews/${editingReview._id}`, payload);
+        toast.success(t("productDetails.reviewUpdated"));
+      } else {
+        await api.post(`/reviews/product/${id}`, payload);
+        toast.success(t("productDetails.reviewSubmitted"));
+      }
       setReviewComment("");
       setReviewRating(5);
-      toast.success(t("productDetails.reviewSubmitted"));
+      setReviewImages([]);
+      setEditingReview(null);
+      fetchReviews(id, 1, reviewSort, reviewFilter, false);
+      fetchStats(id);
     } catch (err) {
       toast.error(err.response?.data?.message || t("productDetails.errorReview"));
     } finally {
       setSubmittingReview(false);
     }
+  };
+
+  const handleToggleHelpful = async (reviewId) => {
+    setHelpfulLoading(reviewId);
+    try {
+      const { data } = await api.post(`/reviews/${reviewId}/helpful`);
+      setReviews((prev) => prev.map((r) => r._id === reviewId ? { ...r, helpfulCount: data.helpfulCount, _isHelpful: data.isHelpful } : r));
+    } catch { /* ignore */ }
+    setHelpfulLoading(null);
+  };
+
+  const handleReport = async (reviewId) => {
+    try {
+      await api.post(`/reviews/${reviewId}/report`, { reason: "Inappropriate" });
+      toast.success(t("productDetails.reviewReported"));
+      setReviews((prev) => prev.map((r) => r._id === reviewId ? { ...r, isReported: true } : r));
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to report");
+    }
+  };
+
+  const handleReviewImageUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (reviewImages.length + files.length > 5) {
+      toast.error("Max 5 images");
+      return;
+    }
+    try {
+      const resized = await Promise.all(files.map((f) => resizeImage(f, { width: 800, height: 800, quality: 0.8 })));
+      setReviewImages((prev) => [...prev, ...resized]);
+    } catch {
+      toast.error("Failed to process images");
+    }
+    e.target.value = "";
   };
 
   const isWishlisted = wishlist?.some((item) =>
@@ -135,8 +214,9 @@ function ProductDetails() {
   const discountPercent = originalPrice > 0 && originalPrice > currentPrice ? Math.round((1 - currentPrice / originalPrice) * 100) : 0;
   const currentStock = selectedVariant ? (selectedVariant.countInStock ?? 0) : (product?.countInStock ?? 0);
   const displayImages = product?.images?.length ? product.images : [product?.image];
-  const avgRating = product?.rating || 0;
-  const reviewCount = reviews.length || product?.numReviews || 0;
+  const avgRating = reviewStats.average || product?.rating || 0;
+  const reviewCount = reviewStats.total || reviews.length || product?.numReviews || 0;
+  const userReview = reviews.find((r) => r.user?.name && isAuthenticated && r._currentUser);
 
   const handleWishlistToggle = async () => {
     setActionLoading(true);
@@ -204,14 +284,14 @@ function ProductDetails() {
           <ChevronRight size={12} />
           <Link to="/products" className="hover:text-emerald-600 transition-colors">{t("productDetails.shop")}</Link>
           <ChevronRight size={12} />
-          <span className="text-zinc-600 dark:text-zinc-300 truncate font-medium">{product.name}</span>
+          <span className="text-zinc-600 dark:text-zinc-300 truncate font-medium">{tp.name}</span>
         </div>
 
         <div className="mx-auto max-w-7xl px-4 pb-8 lg:grid lg:grid-cols-2 lg:gap-14">
           {/* Image Gallery */}
           <div className="lg:sticky lg:top-24 lg:self-start">
-            <div className="relative mb-4 overflow-hidden rounded-2xl" style={{ backgroundImage: "url(/images/productbackground.jpg)", backgroundSize: "cover", backgroundPosition: "center" }}>
-              <div className="aspect-[4/5] flex items-center justify-center p-8">
+            <div className="relative mb-4 overflow-hidden rounded-2xl" style={{ backgroundImage: "url(/images/productbackground.webp)", backgroundSize: "cover", backgroundPosition: "center" }}>
+              <div className="aspect-square flex items-center justify-center p-8">
                 {currentStock < 1 && (
                   <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/70 backdrop-blur-sm dark:bg-black/70">
                     <span className="rounded-full bg-red-600 px-8 py-3 text-lg font-bold text-white tracking-widest uppercase shadow-xl">{t("productDetails.soldOut")}</span>
@@ -257,13 +337,13 @@ function ProductDetails() {
                   <>
                     <button
                       onClick={() => setSelectedImage((p) => (p === 0 ? displayImages.length - 1 : p - 1))}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2.5 shadow-lg backdrop-blur-sm transition hover:bg-white dark:bg-zinc-800/80 dark:hover:bg-zinc-800"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-3 shadow-lg backdrop-blur-sm transition hover:bg-white dark:bg-zinc-800/80 dark:hover:bg-zinc-800 min-h-[44px] min-w-[44px] flex items-center justify-center"
                     >
                       <ChevronLeft size={18} />
                     </button>
                     <button
                       onClick={() => setSelectedImage((p) => (p === displayImages.length - 1 ? 0 : p + 1))}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-2.5 shadow-lg backdrop-blur-sm transition hover:bg-white dark:bg-zinc-800/80 dark:hover:bg-zinc-800"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-3 shadow-lg backdrop-blur-sm transition hover:bg-white dark:bg-zinc-800/80 dark:hover:bg-zinc-800 min-h-[44px] min-w-[44px] flex items-center justify-center"
                     >
                       <ChevronRight size={18} />
                     </button>
@@ -327,7 +407,7 @@ function ProductDetails() {
 
             {/* Name */}
             <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-white sm:text-4xl lg:text-4xl leading-tight">
-              {product.name}
+              {tp.name}
             </h1>
 
             {/* Rating */}
@@ -342,19 +422,19 @@ function ProductDetails() {
 
             {/* Price */}
             <div className="mt-6 flex items-baseline gap-3">
-              <span className="text-4xl font-black text-zinc-900 dark:text-white">₹{currentPrice}</span>
+              <span className="text-4xl font-black text-zinc-900 dark:text-white">{formatPrice(currentPrice)}</span>
               {discountPercent > 0 && (
                 <>
-                  <span className="text-xl text-zinc-400 line-through">₹{originalPrice}</span>
+                  <span className="text-xl text-zinc-400 line-through">{formatPrice(originalPrice)}</span>
                   <span className="rounded-lg bg-red-100 px-2.5 py-1 text-xs font-bold text-red-700 dark:bg-red-900/30 dark:text-red-400">{discountPercent}% OFF</span>
                 </>
               )}
             </div>
 
             {/* Short Description */}
-            {product.description && (
+            {tp.description && (
               <p className="mt-5 leading-relaxed text-zinc-600 dark:text-zinc-400 text-sm border-l-2 border-emerald-200 dark:border-emerald-800 pl-4">
-                {product.description}
+                {tp.description}
               </p>
             )}
 
@@ -374,30 +454,34 @@ function ProductDetails() {
                         : "border-zinc-200 text-zinc-600 hover:border-zinc-300 dark:border-zinc-700 dark:text-zinc-400"
                     }`}
                   >
-                    {v.label} — ₹{v.price}
+                    {v.label} — {formatPrice(v.price)}
                   </button>
                 ))}
               </div>
             )}
 
-            {/* Quantity + Actions */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center rounded-xl border border-zinc-200 dark:border-zinc-700">
+            {/* Quantity + Total */}
+            <div className="flex items-center gap-4 rounded-xl border border-zinc-200 bg-zinc-50 p-3 dark:border-zinc-700 dark:bg-zinc-800/50">
+              <div className="flex items-center rounded-lg border border-zinc-200 dark:border-zinc-600">
                 <button
                   onClick={() => setQuantity((p) => Math.max(1, p - 1))}
-                  className="flex h-12 w-12 items-center justify-center text-zinc-500 transition hover:text-zinc-900 dark:hover:text-white"
+                  className="flex h-10 w-10 items-center justify-center text-zinc-500 transition hover:text-zinc-900 dark:hover:text-white"
                 >
                   <Minus size={16} />
                 </button>
-                <span className="flex h-12 w-12 items-center justify-center text-sm font-semibold text-zinc-900 dark:text-white">
+                <span className="flex h-10 w-10 items-center justify-center text-sm font-semibold text-zinc-900 dark:text-white">
                   {quantity}
                 </span>
                 <button
                   onClick={() => setQuantity((p) => (p < currentStock ? p + 1 : p))}
-                  className="flex h-12 w-12 items-center justify-center text-zinc-500 transition hover:text-zinc-900 dark:hover:text-white"
+                  className="flex h-10 w-10 items-center justify-center text-zinc-500 transition hover:text-zinc-900 dark:hover:text-white"
                 >
                   <Plus size={16} />
                 </button>
+              </div>
+              <div className="text-sm text-zinc-500 dark:text-zinc-400">
+                <span className="font-bold text-zinc-900 dark:text-white">{formatPrice(currentPrice * quantity)}</span>
+                <span className="ml-1">{quantity > 1 ? `for ${quantity}` : "each"}</span>
               </div>
             </div>
 
@@ -441,7 +525,7 @@ function ProductDetails() {
             </button>
 
             {/* Trust Badges */}
-            <div className="mt-6 grid grid-cols-3 gap-3 rounded-2xl bg-zinc-50 p-4 dark:bg-zinc-900">
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 rounded-2xl bg-zinc-50 p-4 dark:bg-zinc-900">
               <div className="flex items-center gap-2.5 text-xs text-zinc-600 dark:text-zinc-400">
                 <Truck size={18} className="text-emerald-600 shrink-0" />
                 <span>{t("productDetails.freeShipping")}</span>
@@ -483,7 +567,7 @@ function ProductDetails() {
                 {activeTab === "description" && (
                   <motion.div key="description" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.25 }}>
                     <div className="max-w-3xl">
-                      <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400 whitespace-pre-line">{product.description}</p>
+                      <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400 whitespace-pre-line">{tp.description}</p>
                     </div>
                     <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-4">
                       <div className="rounded-xl bg-zinc-50 p-4 dark:bg-zinc-900">
@@ -503,12 +587,12 @@ function ProductDetails() {
                         <p className="mt-1 text-sm font-semibold text-zinc-800 dark:text-zinc-200">{product.expiryDate || t("productDetails.shelfLifeValue")}</p>
                       </div>
                     </div>
-                    {product.sideEffects && (
+                    {tp.sideEffects && (
                       <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 dark:border-red-800/30 dark:bg-red-900/10">
                         <p className="flex items-center gap-2 text-xs font-semibold text-red-700 dark:text-red-400">
                           <XCircle size={14} /> {t("productDetails.sideEffects")}
                         </p>
-                        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{product.sideEffects}</p>
+                        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{tp.sideEffects}</p>
                       </div>
                     )}
                   </motion.div>
@@ -516,9 +600,9 @@ function ProductDetails() {
 
                 {activeTab === "benefits" && (
                   <motion.div key="benefits" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.25 }}>
-                    {product.benefits?.length > 0 ? (
+                    {tp.benefits?.length > 0 ? (
                       <div className="grid sm:grid-cols-2 gap-3 max-w-3xl">
-                        {product.benefits.map((item, idx) => (
+                        {tp.benefits.map((item, idx) => (
                           <div key={idx} className="flex items-start gap-3 rounded-xl border border-zinc-100 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
                             <CheckCircle size={18} className="mt-0.5 shrink-0 text-emerald-600" />
                             <span className="text-sm text-zinc-700 dark:text-zinc-300">{item}</span>
@@ -533,9 +617,9 @@ function ProductDetails() {
 
                 {activeTab === "ingredients" && (
                   <motion.div key="ingredients" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.25 }}>
-                    {product.ingredients?.length > 0 ? (
+                    {tp.ingredients?.length > 0 ? (
                       <ul className="space-y-2 max-w-xl">
-                        {product.ingredients.map((item, idx) => (
+                        {tp.ingredients.map((item, idx) => (
                           <li key={idx} className="flex items-center gap-3 text-sm text-zinc-700 dark:text-zinc-300">
                             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
                             {item}
@@ -550,12 +634,12 @@ function ProductDetails() {
 
                 {activeTab === "usage" && (
                   <motion.div key="usage" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.25 }}>
-                    {product.usageInstructions ? (
+                    {tp.usageInstructions ? (
                       <div className="max-w-2xl rounded-xl bg-emerald-50 p-6 dark:bg-emerald-900/10">
                         <p className="flex items-center gap-2 text-sm font-semibold text-emerald-700 dark:text-emerald-400 mb-2">
                           <Clock size={16} /> {t("productDetails.usageHeading")}
                         </p>
-                        <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">{product.usageInstructions}</p>
+                        <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">{tp.usageInstructions}</p>
                       </div>
                     ) : (
                       <p className="text-sm text-zinc-400">{t("productDetails.usageComingSoon")}</p>
@@ -586,49 +670,167 @@ function ProductDetails() {
 
         {/* Reviews Section */}
         <div className="border-t border-zinc-100 dark:border-zinc-800">
-          <div className="mx-auto max-w-7xl px-4 py-8">
-            <div className="flex items-baseline gap-3 mb-2">
-              <h2 className="text-lg font-bold text-zinc-900 dark:text-white">{t("productDetails.customerReviews")}</h2>
-              <span className="text-sm text-zinc-400">({reviewCount})</span>
-            </div>
-
-            <div className="flex items-center gap-2 mb-8">
-              <StarDisplay rating={avgRating} size={16} />
-              <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">{avgRating}</span>
-              <span className="text-xs text-zinc-400">{t("productDetails.outOf5")}</span>
-            </div>
-
-            {reviews.length > 0 ? (
-              <div className="space-y-4 max-w-3xl">
-                {reviews.map((review) => (
-                  <div key={review._id} className="rounded-xl border border-zinc-100 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-                          {(review.user?.name || "A").charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">{review.user?.name || "Anonymous"}</p>
-                          <p className="text-xs text-zinc-400">{new Date(review.createdAt).toLocaleDateString("en-IN", { year: "numeric", month: "short", day: "numeric" })}</p>
-                        </div>
-                      </div>
-                      <div className="flex">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} size={12} className={i < review.rating ? "fill-amber-400 text-amber-400" : "text-zinc-200 dark:text-zinc-700"} />
-                        ))}
-                      </div>
-                    </div>
-                    <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">{review.comment}</p>
-                  </div>
-                ))}
+          <div className="mx-auto max-w-7xl px-4 py-10">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-end gap-4 mb-8">
+              <div className="flex-1">
+                <h2 className="text-xl font-bold text-zinc-900 dark:text-white mb-1">{t("productDetails.customerReviews")}</h2>
+                <div className="flex items-center gap-2">
+                  <StarDisplay rating={avgRating} size={16} />
+                  <span className="text-sm font-bold text-zinc-800 dark:text-zinc-200">{avgRating}</span>
+                  <span className="text-xs text-zinc-400">({reviewCount} {reviewCount === 1 ? "review" : "reviews"})</span>
+                </div>
               </div>
-            ) : (
-              <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">{t("productDetails.noReviews")}</p>
-            )}
+            </div>
 
+            {/* Star Distribution + Sort */}
+            <div className="grid gap-8 lg:grid-cols-[280px_1fr] mb-8">
+              {/* Distribution */}
+              {reviewStats.total > 0 && (
+                <div className="space-y-1.5">
+                  {[5, 4, 3, 2, 1].map((star) => {
+                    const count = reviewStats.distribution[star] || 0;
+                    const pct = reviewStats.total > 0 ? Math.round((count / reviewStats.total) * 100) : 0;
+                    const isActive = reviewFilter === star;
+                    return (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setReviewFilter(isActive ? 0 : star)}
+                        className={`flex items-center gap-2 w-full group transition ${isActive ? "opacity-100" : "opacity-70 hover:opacity-100"}`}
+                      >
+                        <span className="text-xs font-medium text-zinc-500 w-3">{star}</span>
+                        <Star size={12} className="fill-amber-400 text-amber-400 shrink-0" />
+                        <div className="flex-1 h-2 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
+                          <div className="h-full rounded-full bg-amber-400 transition-all duration-500" style={{ width: `${pct}%` }} />
+                        </div>
+                        <span className="text-xs text-zinc-400 w-8 text-right">{count}</span>
+                      </button>
+                    );
+                  })}
+                  {reviewFilter > 0 && (
+                    <button onClick={() => setReviewFilter(0)} className="text-xs text-emerald-600 hover:underline mt-1">
+                      {t("productDetails.clearFilter")}
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Sort + Reviews */}
+              <div>
+                {/* Sort Bar */}
+                <div className="flex items-center gap-2 mb-4">
+                  <SlidersHorizontal size={14} className="text-zinc-400" />
+                  <select
+                    value={reviewSort}
+                    onChange={(e) => setReviewSort(e.target.value)}
+                    className="text-sm border border-zinc-200 dark:border-zinc-700 rounded-lg px-3 py-1.5 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  >
+                    <option value="newest">{t("productDetails.sortNewest")}</option>
+                    <option value="highest">{t("productDetails.sortHighest")}</option>
+                    <option value="lowest">{t("productDetails.sortLowest")}</option>
+                    <option value="helpful">{t("productDetails.sortHelpful")}</option>
+                  </select>
+                </div>
+
+                {/* Review List */}
+                {loadingReviews && reviews.length === 0 ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="rounded-xl border border-zinc-100 dark:border-zinc-800 p-5 animate-pulse">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="h-9 w-9 rounded-full bg-zinc-200 dark:bg-zinc-700" />
+                          <div className="space-y-1.5"><div className="h-3 w-24 rounded bg-zinc-200 dark:bg-zinc-700" /><div className="h-2.5 w-16 rounded bg-zinc-100 dark:bg-zinc-800" /></div>
+                        </div>
+                        <div className="h-3 w-full rounded bg-zinc-100 dark:bg-zinc-800 mb-1.5" />
+                        <div className="h-3 w-3/4 rounded bg-zinc-100 dark:bg-zinc-800" />
+                      </div>
+                    ))}
+                  </div>
+                ) : reviews.length > 0 ? (
+                  <div className="space-y-4">
+                    {reviews.map((review) => (
+                      <div key={review._id} className="rounded-xl border border-zinc-100 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900 transition hover:shadow-sm">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                              {(review.user?.name || "A").charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">{review.user?.name || "Anonymous"}</p>
+                                {review.isVerifiedPurchase && (
+                                  <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 dark:text-emerald-400 px-1.5 py-0.5 rounded-full">
+                                    <BadgeCheck size={10} /> {t("productDetails.verifiedPurchase")}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-[11px] text-zinc-400">{new Date(review.createdAt).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })}</p>
+                            </div>
+                          </div>
+                          <div className="flex">
+                            {[1, 2, 3, 4, 5].map((s) => (
+                              <Star key={s} size={12} className={s <= review.rating ? "fill-amber-400 text-amber-400" : "text-zinc-200 dark:text-zinc-700"} />
+                            ))}
+                          </div>
+                        </div>
+                        <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed mb-3">{review.comment}</p>
+
+                        {review.images?.length > 0 && (
+                          <div className="flex gap-2 mb-3 overflow-x-auto">
+                            {review.images.map((img, i) => (
+                              <img key={i} src={img} alt="" className="h-16 w-16 rounded-lg object-cover border border-zinc-100 dark:border-zinc-800" />
+                            ))}
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-3 pt-2 border-t border-zinc-50 dark:border-zinc-800/50">
+                          <button
+                            onClick={() => handleToggleHelpful(review._id)}
+                            disabled={helpfulLoading === review._id}
+                            className="flex items-center gap-1 text-xs text-zinc-400 hover:text-emerald-600 transition disabled:opacity-50"
+                          >
+                            <ThumbsUp size={12} className={review._isHelpful ? "fill-emerald-500 text-emerald-500" : ""} />
+                            {review.helpfulCount > 0 && <span>{review.helpfulCount}</span>}
+                            <span className="hidden sm:inline">{t("productDetails.helpful")}</span>
+                          </button>
+                          {!review.isReported ? (
+                            <button
+                              onClick={() => handleReport(review._id)}
+                              className="flex items-center gap-1 text-xs text-zinc-400 hover:text-red-500 transition"
+                            >
+                              <Flag size={12} />
+                              <span className="hidden sm:inline">{t("productDetails.report")}</span>
+                            </button>
+                          ) : (
+                            <span className="text-xs text-zinc-300 dark:text-zinc-600">{t("productDetails.reported")}</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+
+                    {reviewPage < reviewTotalPages && (
+                      <button
+                        onClick={() => fetchReviews(id, reviewPage + 1, reviewSort, reviewFilter, true)}
+                        disabled={loadingReviews}
+                        className="w-full py-2.5 text-sm font-medium text-emerald-600 border border-emerald-200 dark:border-emerald-800 rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition disabled:opacity-50"
+                      >
+                        {loadingReviews ? <Loader2 size={16} className="animate-spin mx-auto" /> : t("productDetails.loadMore")}
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">{t("productDetails.noReviews")}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Write Review */}
             {isAuthenticated ? (
-              <div className="mt-8 max-w-xl">
-                <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 mb-4">{t("productDetails.writeReview")}</h3>
+              <div className="max-w-xl border-t border-zinc-100 dark:border-zinc-800 pt-8">
+                <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 mb-4">
+                  {editingReview ? t("productDetails.editReview") : t("productDetails.writeReview")}
+                </h3>
                 <form onSubmit={handleSubmitReview} className="space-y-4">
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-zinc-500">{t("productDetails.yourRating")}</span>
@@ -645,13 +847,37 @@ function ProductDetails() {
                     placeholder={t("productDetails.reviewPlaceholder")}
                     className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white dark:placeholder-zinc-500 resize-none"
                   />
+                  <div className="flex items-center gap-3">
+                    <label className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-emerald-600 cursor-pointer transition">
+                      <Camera size={14} />
+                      <span>{reviewImages.length}/5</span>
+                      <input type="file" accept="image/*" multiple onChange={handleReviewImageUpload} className="hidden" />
+                    </label>
+                    {editingReview && (
+                      <button type="button" onClick={() => { setEditingReview(null); setReviewComment(""); setReviewRating(5); setReviewImages([]); }} className="text-xs text-zinc-400 hover:text-zinc-600">
+                        {t("productDetails.cancelEdit")}
+                      </button>
+                    )}
+                  </div>
+                  {reviewImages.length > 0 && (
+                    <div className="flex gap-2 flex-wrap">
+                      {reviewImages.map((img, i) => (
+                        <div key={i} className="relative">
+                          <img src={img} alt="" className="h-14 w-14 rounded-lg object-cover border border-zinc-200 dark:border-zinc-700" />
+                          <button type="button" onClick={() => setReviewImages((prev) => prev.filter((_, j) => j !== i))} className="absolute -top-1.5 -right-1.5 h-4 w-4 flex items-center justify-center rounded-full bg-red-500 text-white">
+                            <X size={10} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <button
                     type="submit"
                     disabled={submittingReview || !reviewComment.trim()}
                     className="flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 active:scale-[0.98] disabled:opacity-50"
                   >
                     {submittingReview ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-                    {submittingReview ? t("productDetails.submitting") : t("productDetails.submitReview")}
+                    {submittingReview ? t("productDetails.submitting") : editingReview ? t("productDetails.updateReview") : t("productDetails.submitReview")}
                   </button>
                 </form>
               </div>
@@ -679,7 +905,7 @@ function ProductDetails() {
                       <img src={item.image || item.images?.[0] || "/placeholder.jpg"} alt={item.name} className="h-full w-full object-cover mix-blend-multiply dark:mix-blend-normal transition duration-500 group-hover:scale-105" />
                     </div>
                     <h3 className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 truncate">{item.name}</h3>
-                    <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400 mt-1">₹{item.price}</p>
+                    <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400 mt-1">{formatPrice(item.price)}</p>
                   </Link>
                 ))}
               </div>
@@ -692,8 +918,8 @@ function ProductDetails() {
           <div className="flex items-center justify-between gap-3">
             <div>
               <div>
-                <p className="text-lg font-black text-zinc-900 dark:text-white">₹{currentPrice}</p>
-                {discountPercent > 0 && <p className="text-xs text-zinc-400 line-through">₹{originalPrice}</p>}
+                <p className="text-lg font-black text-zinc-900 dark:text-white">{formatPrice(currentPrice)}</p>
+                {discountPercent > 0 && <p className="text-xs text-zinc-400 line-through">{formatPrice(originalPrice)}</p>}
               </div>
               <span className={`text-[11px] font-semibold ${currentStock > 0 ? "text-emerald-600" : "text-red-600"}`}>
                 {currentStock > 0 ? t("productDetails.mobileInStock") : t("productDetails.mobileOutOfStock")}

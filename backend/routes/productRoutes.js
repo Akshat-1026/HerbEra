@@ -10,6 +10,7 @@ import {
 
 import { protect, admin } from "../middleware/authMiddleware.js";
 import { validate, createProductSchema, updateProductSchema } from "../middleware/validate.js";
+import { detectLanguage } from "../middleware/detectLanguage.js";
 
 const router = express.Router();
 
@@ -19,15 +20,15 @@ const router = express.Router();
 
 // @route   GET /api/products
 // @desc    Fetch and display all available herbal items
-router.get("/", getProducts);
+router.get("/", detectLanguage, getProducts);
 
 // @route   GET /api/products/search
 // 🔥 Placed ABOVE /:id so Express doesn't mistake "search" for an ID
-router.get("/search", searchProducts);
+router.get("/search", detectLanguage, searchProducts);
 
 // @route   GET /api/products/:id
 // @desc    Fetch details for a single item by its database ID
-router.get("/:id", getProductById);
+router.get("/:id", detectLanguage, getProductById);
 
 
 /* ==========================================================================

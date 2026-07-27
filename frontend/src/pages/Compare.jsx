@@ -5,6 +5,7 @@ import { ArrowLeft, X, Scale, ShoppingCart, Star, Zap } from "lucide-react";
 import { useCart } from "../hook/CartHook";
 import { toast } from "react-toastify";
 import SEO from "../components/SEO";
+import { useCurrency } from "../context/CurrencyContext";
 
 function getDiscountPercent(product, selectedVariant) {
   if (selectedVariant?.originalPrice > 0) {
@@ -17,6 +18,7 @@ function getDiscountPercent(product, selectedVariant) {
 }
 
 function Compare() {
+  const { formatPrice } = useCurrency();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { compareList, removeFromCompare, clearCompare } = useCompare();
@@ -32,17 +34,17 @@ function Compare() {
           const max = Math.max(...product.variants.map((v) => v.price));
           return (
             <span className="text-base font-bold text-zinc-900 dark:text-white">
-              ₹{min} – ₹{max}
+              {formatPrice(min)} – {formatPrice(max)}
             </span>
           );
         }
         const dp = getDiscountPercent(product, null);
         return (
           <div className="flex flex-col items-center gap-1">
-            <span className="text-base font-bold text-zinc-900 dark:text-white">₹{product.price}</span>
+            <span className="text-base font-bold text-zinc-900 dark:text-white">{formatPrice(product.price)}</span>
             {product.originalPrice > 0 && (
               <div className="flex items-center gap-1.5">
-                <span className="text-xs text-zinc-400 line-through">₹{product.originalPrice}</span>
+                <span className="text-xs text-zinc-400 line-through">{formatPrice(product.originalPrice)}</span>
                 {dp > 0 && (
                   <span className="rounded-sm bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white">{dp}% OFF</span>
                 )}

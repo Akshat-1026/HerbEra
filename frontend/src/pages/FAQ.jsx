@@ -57,7 +57,7 @@ function FAQ() {
     <>
       <SEO title={t("faqPage.pageTitle")} description={t("faqPage.pageDescription")} />
       <div className="min-h-screen bg-[#f8f5ef] dark:bg-zinc-950">
-        <div className="mx-auto max-w-3xl px-6 py-20">
+        <div className="mx-auto max-w-3xl px-6 py-12 md:py-20">
           <motion.div {...fadeUp(0)} className="text-center mb-12">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 mb-6">
               <HelpCircle size={32} className="text-emerald-600 dark:text-emerald-400" />

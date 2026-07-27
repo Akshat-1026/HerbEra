@@ -21,7 +21,7 @@ function BackToTop() {
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.5 }}
           onClick={scrollToTop}
-          className="fixed bottom-8 right-8 z-50 rounded-full bg-green-600 p-3 text-white shadow-lg hover:bg-green-700"
+          className="fixed bottom-6 right-4 sm:right-8 z-50 rounded-full bg-green-600 p-3 text-white shadow-lg hover:bg-green-700"
         >
           <ArrowUp size={24} />
         </motion.button>

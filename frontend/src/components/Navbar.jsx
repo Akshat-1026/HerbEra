@@ -7,11 +7,14 @@ import axios from "axios";
 import { useCart } from "../hook/CartHook";
 import useWishlistHook from "../hook/WishlistHook";
 import useAuth from "../hook/AuthContextHook";
+import { useCurrency } from "../context/CurrencyContext";
 import DarkModeToggle from "./DarkModeToggle";
-import LanguageSwitcher from "./LanguageSwitcher";
+import CurrencySwitcher from "./CurrencySwitcher";
+import Picture from "./Picture";
 
 function Navbar() {
   const { t } = useTranslation();
+  const { formatPrice } = useCurrency();
   const [menuOpen, setMenuOpen] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
   const [navProducts, setNavProducts] = useState([]);
@@ -47,12 +50,12 @@ function Navbar() {
       onMouseLeave={() => setShopOpen(false)}
       className="sticky top-0 z-50 backdrop-blur-lg bg-white/80 dark:bg-gray-900/80 border-b border-gray-200 dark:border-gray-800 shadow-sm font-sans"
     >
-      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between relative">
+      <div className="max-w-7xl mx-auto px-6 py-2.5 flex items-center justify-between relative">
 
         {/* BRAND LOGO */}
-        <Link to="/" onMouseEnter={() => setShopOpen(false)} className="flex items-center gap-2.5 -ml-1">
-          <img src="/images/logo.jpg" alt="Herb-Era" className="h-8 w-auto" />
-          <h1 className="text-2xl font-black tracking-wide font-playfair text-gray-900 dark:text-white">
+        <Link to="/" onMouseEnter={() => setShopOpen(false)} className="flex items-center gap-2 -ml-1">
+          <Picture src="/images/logo.jpg" alt="Herb-Era" className="h-7 w-auto" />
+          <h1 className="text-xl font-black tracking-wide font-playfair text-gray-900 dark:text-white">
             {t("nav.brandHerb")}<span className="font-medium italic text-green-700 dark:text-green-400">{t("nav.brandEra")}</span>
           </h1>
         </Link>
@@ -93,7 +96,7 @@ function Navbar() {
           
           {/* Desktop Utilities (Hidden on mobile) */}
           <div className="hidden md:flex items-center gap-5" onMouseEnter={() => setShopOpen(false)}>
-            <LanguageSwitcher />
+            <CurrencySwitcher />
             <DarkModeToggle />
             
             <Link to="/Wishlist" className="relative flex items-center">
@@ -120,7 +123,7 @@ function Navbar() {
           {/* HAMBURGER TOGGLE BUTTON */}
           <button
             onMouseEnter={() => setShopOpen(false)}
-            className="text-gray-700 dark:text-white p-1 hover:text-green-600 dark:hover:text-green-400 transition focus:outline-none"
+            className="text-gray-700 dark:text-white p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center hover:text-green-600 dark:hover:text-green-400 transition focus:outline-none"
             onClick={() => setMenuOpen(!menuOpen)}
             aria-label={t("nav.toggleMenu")}
           >
@@ -217,11 +220,11 @@ function Navbar() {
                 )}
               </div>
 
-              <div className="flex items-center gap-6 border-t border-gray-100 dark:border-gray-800 pt-4 md:hidden">
-                <LanguageSwitcher />
+              <div className="flex items-center gap-3 md:hidden border-t border-gray-100 dark:border-gray-800 pt-4">
+                <CurrencySwitcher />
                 <DarkModeToggle />
 
-                <Link to="/Wishlist" onClick={() => setMenuOpen(false)} className="relative">
+                <Link to="/Wishlist" onClick={() => setMenuOpen(false)} className="relative flex h-11 w-11 items-center justify-center">
                   <Heart className="text-gray-600 dark:text-gray-300" size={22} />
                   {WishlistCount > 0 && (
                     <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-sans">
@@ -230,11 +233,11 @@ function Navbar() {
                   )}
                 </Link>
 
-                <Link to="/compare" onClick={() => setMenuOpen(false)} className="relative">
+                <Link to="/compare" onClick={() => setMenuOpen(false)} className="relative flex h-11 w-11 items-center justify-center">
                   <Scale className="text-gray-600 dark:text-gray-300" size={22} />
                 </Link>
 
-                <Link to="/cart" onClick={() => setMenuOpen(false)} className="relative flex items-center gap-1.5">
+                <Link to="/cart" onClick={() => setMenuOpen(false)} className="relative flex h-11 items-center gap-1.5 px-2">
                   <ShoppingCart className="text-gray-600 dark:text-gray-300" size={22} />
                   <span className="text-xs uppercase tracking-wider font-semibold text-gray-600 dark:text-gray-300">
                   {t("nav.cartCount", { count: cartCount })}
@@ -326,7 +329,7 @@ function Navbar() {
                             {p.name}
                           </h3>
                           <span className="text-sm font-bold text-zinc-900 dark:text-white">
-                            ₹{p.price}
+                            {formatPrice(p.price)}
                           </span>
                         </div>
                         <div className="flex shrink-0 items-center gap-1 rounded-md bg-amber-50 px-2 py-1 dark:bg-amber-900/20">

@@ -85,11 +85,11 @@ const CookieConsent = () => {
               </div>
               <button
                 onClick={() => setPreferences((p) => ({ ...p, analytics: !p.analytics }))}
-                className={`ml-4 h-5 w-9 rounded-full px-0.5 py-0.5 transition-colors ${
+                className={`ml-4 h-6 w-11 rounded-full px-0.5 py-0.5 transition-colors ${
                   preferences.analytics ? "bg-green-500" : "bg-zinc-300 dark:bg-zinc-600"
                 }`}
               >
-                <div className={`h-4 w-4 rounded-full bg-white transition-transform ${preferences.analytics ? "translate-x-4" : "translate-x-0"}`} />
+                <div className={`h-5 w-5 rounded-full bg-white transition-transform ${preferences.analytics ? "translate-x-5" : "translate-x-0"}`} />
               </button>
             </div>
 
@@ -102,11 +102,11 @@ const CookieConsent = () => {
               </div>
               <button
                 onClick={() => setPreferences((p) => ({ ...p, marketing: !p.marketing }))}
-                className={`ml-4 h-5 w-9 rounded-full px-0.5 py-0.5 transition-colors ${
+                className={`ml-4 h-6 w-11 rounded-full px-0.5 py-0.5 transition-colors ${
                   preferences.marketing ? "bg-green-500" : "bg-zinc-300 dark:bg-zinc-600"
                 }`}
               >
-                <div className={`h-4 w-4 rounded-full bg-white transition-transform ${preferences.marketing ? "translate-x-4" : "translate-x-0"}`} />
+                <div className={`h-5 w-5 rounded-full bg-white transition-transform ${preferences.marketing ? "translate-x-5" : "translate-x-0"}`} />
               </button>
             </div>
           </div>

@@ -6,6 +6,7 @@ import { Search, X, ChevronDown, Star, ArrowUpDown, Filter, Grid3X3 } from "luci
 import { useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import ProductCard from "../components/ProductCard";
+import { useCurrency } from "../context/CurrencyContext";
 import SEO from "../components/SEO";
 
 const fadeUp = (delay = 0) => ({
@@ -161,6 +162,7 @@ function FilterSidebar({ t, categories, herbalTypes, category, onCategoryChange,
 
 export default function SearchPage() {
   const { t } = useTranslation();
+  const { formatPrice } = useCurrency();
 
   const categories = [
     t("search.categoryAll"),
@@ -289,8 +291,8 @@ export default function SearchPage() {
   const activeFilters = [];
   if (q) activeFilters.push({ key: "q", label: `"${q}"` });
   if (category && category !== "All") activeFilters.push({ key: "category", label: category });
-  if (minPrice) activeFilters.push({ key: "minPrice", label: `Min ₹${minPrice}` });
-  if (maxPrice) activeFilters.push({ key: "maxPrice", label: `Max ₹${maxPrice}` });
+  if (minPrice) activeFilters.push({ key: "minPrice", label: `Min ${formatPrice(minPrice)}` });
+  if (maxPrice) activeFilters.push({ key: "maxPrice", label: `Max ${formatPrice(maxPrice)}` });
   if (rating) activeFilters.push({ key: "rating", label: `${rating}+ Stars` });
   if (sort && sort !== "default") {
     const opt = sortOptions.find((o) => o.value === sort);

@@ -133,9 +133,12 @@ export const createOrderSchema = z.object({
 
 export const createReviewSchema = z.object({
   body: z.object({
-    product: z.string().min(1, "Product ID is required"),
-    rating: z.number().int().min(1, "Rating must be at least 1").max(5, "Rating cannot exceed 5"),
-    comment: z.string().max(1000, "Comment too long").optional(),
+    rating: z.coerce.number().int().min(1, "Rating must be at least 1").max(5, "Rating cannot exceed 5"),
+    comment: z.string().min(1, "Comment is required").max(1000, "Comment too long"),
+    images: z.array(z.string()).max(5).optional(),
+  }),
+  params: z.object({
+    productId: z.string().min(1, "Product ID is required"),
   }),
 });
 

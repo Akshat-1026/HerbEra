@@ -1,5 +1,14 @@
 import mongoose from "mongoose";
 
+const translationFields = {
+  name: { type: String, default: "" },
+  description: { type: String, default: "" },
+  benefits: { type: [String], default: [] },
+  ingredients: { type: [String], default: [] },
+  usageInstructions: { type: String, default: "" },
+  sideEffects: { type: String, default: "" },
+};
+
 const productSchema = new mongoose.Schema(
   {
     name: {
@@ -66,6 +75,12 @@ const productSchema = new mongoose.Schema(
     images: [String],
     video: { type: String, default: "" },
 
+    translations: {
+      type: Map,
+      of: new mongoose.Schema(translationFields, { _id: false }),
+      default: {},
+    },
+
     isBestseller: {
       type: Boolean,
       default: false,
@@ -98,6 +113,19 @@ const productSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+productSchema.methods.getLocalized = function (lang = "en") {
+  const t = this.translations?.get(lang) || {};
+  return {
+    ...this.toObject(),
+    name: t.name || this.name,
+    description: t.description || this.description,
+    benefits: t.benefits?.length > 0 ? t.benefits : this.benefits,
+    ingredients: t.ingredients?.length > 0 ? t.ingredients : this.ingredients,
+    usageInstructions: t.usageInstructions || this.usageInstructions,
+    sideEffects: t.sideEffects || this.sideEffects,
+  };
+};
 
 const Product = mongoose.model("Product", productSchema);
 

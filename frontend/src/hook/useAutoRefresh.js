@@ -6,8 +6,8 @@ const STARTUP_DELAY = 8000;
 
 export default function useAutoRefresh() {
   useEffect(() => {
-    const base = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-    const url = `${base}/events`;
+    const backendBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
+    const url = `${backendBase}/api/events`;
     let eventSource;
     let timer;
     let delay = INITIAL_DELAY;
@@ -16,7 +16,12 @@ export default function useAutoRefresh() {
     function connect() {
       if (!active) return;
 
-      eventSource = new EventSource(url);
+      try {
+        eventSource = new EventSource(url);
+      } catch {
+        retry();
+        return;
+      }
 
       eventSource.addEventListener("site-update", () => {
         if (!window.__herb_reload_pending) {
@@ -34,11 +39,14 @@ export default function useAutoRefresh() {
 
       eventSource.onerror = () => {
         eventSource.close();
-        timer = setTimeout(() => {
-          delay = Math.min(delay * 2, MAX_DELAY);
-          connect();
-        }, delay);
+        retry();
       };
+    }
+
+    function retry() {
+      if (!active) return;
+      delay = Math.min(delay * 2, MAX_DELAY);
+      timer = setTimeout(connect, delay);
     }
 
     timer = setTimeout(() => { if (active) connect(); }, STARTUP_DELAY);

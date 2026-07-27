@@ -8,8 +8,10 @@ import { motion } from "framer-motion";
 import { useCart } from "../hook/CartHook";
 import { useWishlist } from "../context/WishlistContext";
 import SEO from "../components/SEO";
+import { useCurrency } from "../context/CurrencyContext";
 
 function Wishlist() {
+  const { formatPrice } = useCurrency();
   const { t } = useTranslation();
   const { wishlist, removeFromWishlist } = useWishlist();
   const { addToCart } = useCart();
@@ -214,10 +216,10 @@ function Wishlist() {
 
                     <div className="mt-auto flex items-center justify-between pt-2">
                       <span className="text-lg font-bold text-zinc-800 dark:text-white">
-                        ₹{product.price?.toLocaleString()}
+                        {formatPrice(product.price)}
                       </span>
                       {product.originalPrice > 0 && (
-                        <span className="text-xs text-zinc-400 line-through">₹{product.originalPrice?.toLocaleString()}</span>
+                        <span className="text-xs text-zinc-400 line-through">{formatPrice(product.originalPrice)}</span>
                       )}
                     </div>
 

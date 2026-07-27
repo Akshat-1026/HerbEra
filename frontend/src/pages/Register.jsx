@@ -47,7 +47,7 @@ const Register = () => {
     <>
     <SEO title={t("register.pageTitle")} />
     <div className="flex min-h-screen items-center justify-center bg-[#f8f5ef] px-6 dark:bg-zinc-950">
-      <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-md dark:bg-zinc-900">
+      <div className="w-full max-w-md rounded-3xl bg-white p-6 sm:p-8 shadow-md dark:bg-zinc-900">
         <div className="mb-8 text-center">
           <Leaf className="mx-auto text-green-600" size={40} />
           <h2 className="mt-4 text-3xl font-bold text-zinc-800 dark:text-white">

@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import axios from "axios";
+import { useCurrency } from "../context/CurrencyContext";
 
 function FeaturedProducts() {
   const { t } = useTranslation();
+  const { formatPrice } = useCurrency();
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
@@ -35,7 +37,7 @@ function FeaturedProducts() {
             </h3>
 
             <p className="text-green-400 text-xl">
-              ₹{product.price}
+              {formatPrice(product.price)}
             </p>
           </div>
         ))}

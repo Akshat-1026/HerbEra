@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../services/api";
 import { useTranslation } from "react-i18next";
+import { useCurrency } from "../context/CurrencyContext";
 
 export default function SearchSuggestions({ query }) {
   const { t } = useTranslation();
+  const { formatPrice } = useCurrency();
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -78,7 +80,7 @@ export default function SearchSuggestions({ query }) {
             </span>
 
             <span className="text-xs text-gray-500">
-              ₹{product.price}
+              {formatPrice(product.price)}
             </span>
           </div>
         </Link>

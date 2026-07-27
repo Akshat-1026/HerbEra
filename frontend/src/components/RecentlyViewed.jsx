@@ -4,12 +4,14 @@ import { Link } from "react-router-dom";
 import axios from "axios";
 import { Clock, ArrowRight } from "lucide-react";
 import { useRecentlyViewed } from "../hook/useRecentlyViewed";
+import { useCurrency } from "../context/CurrencyContext";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export default function RecentlyViewed() {
   const { t } = useTranslation();
   const { getRecentlyViewed } = useRecentlyViewed();
+  const { formatPrice } = useCurrency();
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
@@ -48,7 +50,7 @@ export default function RecentlyViewed() {
               <img src={product.image} alt={product.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
             </div>
             <h3 className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 truncate">{product.name}</h3>
-            <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400 mt-1">₹{product.price}</p>
+            <p className="text-sm font-bold text-emerald-700 dark:text-emerald-400 mt-1">{formatPrice(product.price)}</p>
           </Link>
         ))}
       </div>

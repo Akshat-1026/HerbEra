@@ -4,11 +4,21 @@ import Table from "../../components/admin/Table";
 import Modal from "../../components/admin/Modal";
 import Navbar from "../../components/admin/Navbar";
 import Sidebar from "../../components/admin/Sidebar";
-import { Plus } from "lucide-react";
+import { Plus, Globe } from "lucide-react";
 import { ProductVariants } from "../../components/admin/ProductVariants";
 import { toast } from "react-toastify";
 
-const emptyProduct = { name: "", price: 0, category: "", description: "", image: "", countInStock: 0, sku: "", variants: [], goals: [] };
+const LANGUAGES = [
+  { code: "hi", label: "Hindi" },
+  { code: "de", label: "German" },
+  { code: "ja", label: "Japanese" },
+  { code: "fr", label: "French" },
+  { code: "es", label: "Spanish" },
+  { code: "zh", label: "Chinese" },
+  { code: "ar", label: "Arabic" },
+];
+
+const emptyProduct = { name: "", price: 0, category: "", description: "", image: "", countInStock: 0, sku: "", variants: [], goals: [], translations: {} };
 
 const Products = () => {
   const { products, fetchProducts, createProduct, updateProduct, deleteProduct, goals, fetchAdminGoals } = useAdmin();
@@ -16,6 +26,8 @@ const Products = () => {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(emptyProduct);
   const [searchQuery, setSearchQuery] = useState("");
+  const [transLang, setTransLang] = useState("hi");
+  const [showTranslations, setShowTranslations] = useState(false);
 
   const filtered = products.filter((p) =>
     !searchQuery || [p.name, p.category, p.sku].some((f) => f?.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -27,7 +39,13 @@ const Products = () => {
     if (product) {
       setEditing(product);
       const goalIds = (product.goals || []).map((g) => (typeof g === "object" ? g._id : g));
-      setForm({ ...product, goals: goalIds });
+      const trans = {};
+      if (product.translations && typeof product.translations === "object") {
+        Object.entries(product.translations).forEach(([lang, data]) => {
+          if (data && typeof data === "object") trans[lang] = data;
+        });
+      }
+      setForm({ ...product, goals: goalIds, translations: trans });
     } else {
       setEditing(null);
       setForm(emptyProduct);
@@ -152,6 +170,33 @@ const Products = () => {
             <div>
               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Description</label>
               <textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-zinc-800 dark:text-white" required />
+            </div>
+
+            {/* Translations */}
+            <div className="border border-zinc-200 dark:border-zinc-700 rounded-xl overflow-hidden">
+              <button type="button" onClick={() => setShowTranslations(!showTranslations)} className="w-full flex items-center justify-between px-4 py-3 bg-zinc-50 dark:bg-zinc-800/50 text-sm font-medium text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition">
+                <span className="flex items-center gap-2"><Globe size={16} /> Translations (optional)</span>
+                <span className="text-xs text-zinc-400">{showTranslations ? "Hide" : "Show"}</span>
+              </button>
+              {showTranslations && (
+                <div className="p-4 space-y-4">
+                  <div className="flex flex-wrap gap-1.5">
+                    {LANGUAGES.map((l) => (
+                      <button key={l.code} type="button" onClick={() => setTransLang(l.code)} className={`px-3 py-1 rounded-lg text-xs font-medium transition ${transLang === l.code ? "bg-emerald-600 text-white" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700"}`}>
+                        {l.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-500 mb-1">Name ({transLang.toUpperCase()})</label>
+                    <input value={form.translations?.[transLang]?.name || ""} onChange={(e) => setForm({ ...form, translations: { ...form.translations, [transLang]: { ...form.translations?.[transLang], name: e.target.value } } })} className="w-full border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-zinc-800 dark:text-white" placeholder={`Product name in ${LANGUAGES.find((l) => l.code === transLang)?.label}`} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-zinc-500 mb-1">Description ({transLang.toUpperCase()})</label>
+                    <textarea rows={3} value={form.translations?.[transLang]?.description || ""} onChange={(e) => setForm({ ...form, translations: { ...form.translations, [transLang]: { ...form.translations?.[transLang], description: e.target.value } } })} className="w-full border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-zinc-800 dark:text-white resize-none" placeholder={`Description in ${LANGUAGES.find((l) => l.code === transLang)?.label}`} />
+                  </div>
+                </div>
+              )}
             </div>
             {goals.length > 0 && (
               <div>

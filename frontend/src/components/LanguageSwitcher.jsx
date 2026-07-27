@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { ChevronDown } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { useCurrency } from "../context/CurrencyContext";
 
 // UK Flag SVG component for English
 const UKFlag = () => (
@@ -89,6 +90,7 @@ const UAEiranFlag = () => (
 
 function LanguageSwitcher() {
   const { i18n } = useTranslation();
+  const { syncWithLanguage } = useCurrency();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -131,6 +133,7 @@ function LanguageSwitcher() {
               key={lang.code}
               onClick={() => {
                 i18n.changeLanguage(lang.code);
+                syncWithLanguage(lang.code);
                 setOpen(false);
               }}
               className={`flex items-center gap-2.5 w-full px-3 py-2 text-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 ${

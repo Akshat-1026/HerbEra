@@ -128,7 +128,7 @@ function App() {
 
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || ""}>
-    <div className="min-h-screen bg-white text-zinc-900 dark:bg-zinc-950 dark:text-white">
+    <div className="min-h-screen bg-white text-zinc-900 dark:bg-zinc-950 dark:text-white overflow-x-hidden">
       <Analytics />
       <AnnouncementBar />
       <Navbar />

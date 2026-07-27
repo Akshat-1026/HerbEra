@@ -91,7 +91,7 @@ export default function Contact() {
         {/* ===== TOP BAR ===== */}
         <div className="relative overflow-hidden border-b border-zinc-200 dark:border-zinc-800">
           <div className="absolute inset-0">
-            <img src="/images/productbackground.jpg" alt="" className="h-full w-full object-cover" />
+            <img src="/images/productbackground.webp" alt="" className="h-full w-full object-cover" />
           </div>
           <div className="absolute inset-0 bg-[#1b3b2f]/85 dark:bg-black/80" />
           <div className="relative mx-auto flex max-w-6xl flex-col gap-4 px-6 py-10 sm:flex-row sm:items-center sm:justify-between sm:py-14">
@@ -283,14 +283,17 @@ export default function Contact() {
                   {t("contact.followUs")}
                 </h3>
                 <div className="flex gap-2">
-                  <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-200 text-zinc-400 transition-colors hover:border-[#2d5c49] hover:text-[#2d5c49] dark:border-zinc-700 dark:text-zinc-500 dark:hover:border-emerald-500 dark:hover:text-emerald-400">
+                  <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="flex h-11 w-11 items-center justify-center rounded-lg border border-zinc-200 text-zinc-400 transition-colors hover:border-[#2d5c49] hover:text-[#2d5c49] dark:border-zinc-700 dark:text-zinc-500 dark:hover:border-emerald-500 dark:hover:text-emerald-400">
                     <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8C4 18.39 5.61 20 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6C20 5.61 18.39 4 16.4 4H7.6m9.65 1.5a1.25 1.25 0 0 1 0 2.5 1.25 1.25 0 0 1 0-2.5M12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10m0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6z"/></svg>
                   </a>
-                  <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-200 text-zinc-400 transition-colors hover:border-[#2d5c49] hover:text-[#2d5c49] dark:border-zinc-700 dark:text-zinc-500 dark:hover:border-emerald-500 dark:hover:text-emerald-400">
+                  <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="flex h-11 w-11 items-center justify-center rounded-lg border border-zinc-200 text-zinc-400 transition-colors hover:border-[#2d5c49] hover:text-[#2d5c49] dark:border-zinc-700 dark:text-zinc-500 dark:hover:border-emerald-500 dark:hover:text-emerald-400">
                     <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M12 2.04c-5.5 0-10 4.49-10 10.02 0 5 3.66 9.15 8.44 9.9v-7H7.9v-2.9h2.54V9.85c0-2.51 1.49-3.89 3.77-3.89 1.09 0 2.23.2 2.23.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.45 2.9h-2.33v7a10 10 0 0 0 8.44-9.9c0-5.53-4.5-10.02-10-10.02z"/></svg>
                   </a>
-                  <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter" className="flex h-9 w-9 items-center justify-center rounded-lg border border-zinc-200 text-zinc-400 transition-colors hover:border-[#2d5c49] hover:text-[#2d5c49] dark:border-zinc-700 dark:text-zinc-500 dark:hover:border-emerald-500 dark:hover:text-emerald-400">
+                   <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter" className="flex h-11 w-11 items-center justify-center rounded-lg border border-zinc-200 text-zinc-400 transition-colors hover:border-[#2d5c49] hover:text-[#2d5c49] dark:border-zinc-700 dark:text-zinc-500 dark:hover:border-emerald-500 dark:hover:text-emerald-400">
                     <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                  </a>
+                  <a href="https://pinterest.com" target="_blank" rel="noopener noreferrer" aria-label="Pinterest" className="flex h-11 w-11 items-center justify-center rounded-lg border border-zinc-200 text-zinc-400 transition-colors hover:border-[#2d5c49] hover:text-[#2d5c49] dark:border-zinc-700 dark:text-zinc-500 dark:hover:border-emerald-500 dark:hover:text-emerald-400">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.462-6.233 7.462-1.214 0-2.354-.629-2.758-1.379l-.749 2.848c-.269 1.045-1.004 2.352-1.498 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>
                   </a>
                 </div>
               </div>

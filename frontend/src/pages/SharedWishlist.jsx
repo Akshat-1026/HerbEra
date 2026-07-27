@@ -3,10 +3,12 @@ import { useParams, Link } from "react-router-dom";
 import axios from "axios";
 import { Heart, ShoppingCart, ArrowLeft } from "lucide-react";
 import SEO from "../components/SEO";
+import { useCurrency } from "../context/CurrencyContext";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 function SharedWishlist() {
+  const { formatPrice } = useCurrency();
   const { userId } = useParams();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(!!userId);
@@ -63,7 +65,7 @@ function SharedWishlist() {
                   <img src={product.image} alt={product.name} className="h-48 w-full object-cover" />
                   <div className="p-4">
                     <h3 className="font-semibold text-zinc-800 dark:text-white truncate">{product.name}</h3>
-                    <p className="text-lg font-bold text-emerald-700 dark:text-emerald-400 mt-1">₹{product.price}</p>
+                    <p className="text-lg font-bold text-emerald-700 dark:text-emerald-400 mt-1">{formatPrice(product.price)}</p>
                     <Link to={`/products/${product._id}`} className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-green-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-green-700">
                       <ShoppingCart size={14} />
                       View Product

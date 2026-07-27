@@ -2,6 +2,8 @@ import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useTranslation } from "react-i18next";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { useCurrency } from "../context/CurrencyContext";
+import Picture from "../components/Picture";
 import {
   ArrowRight,
   Hourglass,
@@ -36,6 +38,7 @@ const stagger = (index, base = 0.1) => ({
 
 export default function Home() {
   const { t } = useTranslation();
+  const { formatPrice } = useCurrency();
   const heroRef = useRef(null);
 
   const [products, setProducts] = useState([]);
@@ -116,7 +119,7 @@ export default function Home() {
       <BlobBackground />
       <SaleBanner />
       {/* HERO */}
-      <section ref={heroRef} className="relative flex min-h-screen flex-col-reverse items-center justify-between gap-8 px-6 py-12 md:px-14 lg:flex-row lg:px-24">
+      <section ref={heroRef} className="relative flex min-h-screen flex-col-reverse items-center justify-between gap-8 px-6 py-12 md:px-14 lg:flex-row lg:px-24 overflow-hidden">
         <div className="absolute inset-0 bg-linear-to-b from-[#2d5c49]/5 via-transparent to-transparent pointer-events-none" />
         <motion.div style={{ y: textY }} className="max-w-2xl will-change-transform">
           <motion.p
@@ -131,7 +134,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2, type: "spring", stiffness: 100 }}
-            className="mb-4 font-serif text-5xl leading-tight md:text-7xl"
+            className="mb-4 font-serif text-4xl leading-tight md:text-7xl"
           >
             {t("home.heroTitle")}
           </motion.h1>
@@ -183,15 +186,10 @@ export default function Home() {
             transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
             className="absolute inset-0 scale-110 rounded-full bg-[#2d5c49]/20 blur-3xl"
           />
-          <motion.img
-            initial={{ opacity: 0, scale: 0.8, rotate: -5 }}
-            animate={{ opacity: 1, scale: 1, rotate: 0, y: [0, -8, 0] }}
-            transition={{ duration: 1.2, ease: "easeOut", y: { duration: 4, repeat: Infinity, ease: "easeInOut" } }}
+          <Picture
             src="/images/hero.jpg"
             alt={t("home.heroAlt")}
-            loading="lazy"
-            decoding="async"
-            className="relative z-10 w-[520px] rounded-[40px] object-cover shadow-2xl md:w-[680px]"
+            className="relative z-10 w-full max-w-[600px] rounded-[40px] object-cover shadow-2xl md:w-[800px] md:max-w-[800px]"
           />
         </motion.div>
       </section>
@@ -281,15 +279,15 @@ export default function Home() {
               key={index}
               {...stagger(index)}
               whileHover={{ y: -10, transition: { duration: 0.3 } }}
-              className="group relative rounded-3xl bg-white p-8 shadow-md transition-shadow hover:shadow-2xl dark:bg-[#161616]"
+              className="group relative rounded-3xl bg-white px-6 py-5 shadow-md transition-shadow hover:shadow-2xl dark:bg-[#161616]"
             >
-              <div className="mb-4 flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#2d5c49]/10 text-[#2d5c49] transition-colors group-hover:bg-[#2d5c49] group-hover:text-white dark:bg-[#2d5c49]/20">
-                  <item.icon size={20} />
+              <div className="mb-2.5 flex items-center gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#2d5c49]/10 text-[#2d5c49] transition-colors group-hover:bg-[#2d5c49] group-hover:text-white dark:bg-[#2d5c49]/20">
+                  <item.icon size={18} />
                 </div>
-                <h3 className="font-serif text-2xl">{item.title}</h3>
+                <h3 className="font-serif text-xl">{item.title}</h3>
               </div>
-              <p className="leading-relaxed text-gray-600 dark:text-gray-300">{item.desc}</p>
+              <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-300">{item.desc}</p>
             </motion.div>
           ))}
         </div>
@@ -302,7 +300,7 @@ export default function Home() {
             <motion.p {...fadeUp(0)} className="mb-2 text-sm uppercase tracking-[4px] text-[#557c6c]">
               {t("home.bestSellers")}
             </motion.p>
-            <motion.h2 {...fadeUp(0.1)} className="font-serif text-4xl">
+            <motion.h2 {...fadeUp(0.1)} className="font-serif text-3xl md:text-4xl">
               {t("home.bestSellersTitle")}
             </motion.h2>
           </div>
@@ -352,7 +350,7 @@ export default function Home() {
               <motion.p {...fadeUp(0)} className="mb-2 text-sm uppercase tracking-[4px] text-[#557c6c]">
                 {t("home.bestSellers")}
               </motion.p>
-              <motion.h2 {...fadeUp(0.1)} className="font-serif text-4xl">
+              <motion.h2 {...fadeUp(0.1)} className="font-serif text-3xl md:text-4xl">
                 Value Combos
               </motion.h2>
             </div>
@@ -391,10 +389,10 @@ export default function Home() {
                     )}
                   </div>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-xl font-bold text-emerald-700 dark:text-emerald-400">₹{combo.comboPrice}</span>
+                    <span className="text-xl font-bold text-emerald-700 dark:text-emerald-400">{formatPrice(combo.comboPrice)}</span>
                     {combo.originalPrice > 0 && (
                       <>
-                        <span className="text-sm text-zinc-400 line-through">₹{combo.originalPrice}</span>
+                        <span className="text-sm text-zinc-400 line-through">{formatPrice(combo.originalPrice)}</span>
                         <span className="ml-auto text-xs font-medium text-red-500">
                           {Math.round((1 - combo.comboPrice / combo.originalPrice) * 100)}% OFF
                         </span>
@@ -415,7 +413,7 @@ export default function Home() {
             <motion.p {...fadeUp(0)} className="mb-2 text-sm uppercase tracking-[4px] text-[#557c6c]">
               {t("home.journalLabel")}
             </motion.p>
-            <motion.h2 {...fadeUp(0.1)} className="font-serif text-4xl">
+            <motion.h2 {...fadeUp(0.1)} className="font-serif text-3xl md:text-4xl">
               {t("home.journalTitle")}
             </motion.h2>
           </div>
@@ -472,7 +470,7 @@ export default function Home() {
           <motion.p {...fadeUp(0)} className="mb-2 text-sm uppercase tracking-[4px] text-[#557c6c]">
             {t("home.testimonialsLabel")}
           </motion.p>
-          <motion.h2 {...fadeUp(0.1)} className="font-serif text-4xl">
+          <motion.h2 {...fadeUp(0.1)} className="font-serif text-3xl md:text-4xl">
             {t("home.testimonialsTitle")}
           </motion.h2>
         </div>

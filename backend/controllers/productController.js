@@ -2,6 +2,88 @@ import Product from "../models/Product.js";
 import Goal from "../models/Goal.js";
 import { broadcast } from "../utils/sseManager.js";
 import { escapeRegex } from "../utils/sanitize.js";
+import gTranslate from "@vitalets/google-translate-api";
+
+const TRANS_FIELDS = ["name", "description", "benefits", "ingredients", "usageInstructions", "sideEffects"];
+
+const translateText = async (text, to) => {
+  if (!text || text.trim() === "") return text;
+  try {
+    const res = await gTranslate.translate(text, { to });
+    return res.text;
+  } catch {
+    return text;
+  }
+};
+
+const translateBatch = async (obj, lang) => {
+  const results = {};
+  for (const field of TRANS_FIELDS) {
+    const val = obj[field];
+    if (Array.isArray(val)) {
+      const translated = [];
+      for (const item of val) {
+        translated.push(await translateText(String(item), lang));
+      }
+      results[field] = translated;
+    } else if (typeof val === "string" && val.trim()) {
+      results[field] = await translateText(val, lang);
+    }
+  }
+  return results;
+};
+
+const localize = async (product, lang = "en") => {
+  if (!product) return product;
+  const obj = product.toObject ? product.toObject() : product;
+  if (lang === "en") return obj;
+  const existing = obj.translations?.[lang];
+  const hasAll = existing && TRANS_FIELDS.every((f) => {
+    const v = existing[f];
+    return v && (Array.isArray(v) ? v.length > 0 : String(v).trim() !== "");
+  });
+  if (hasAll) {
+    return {
+      ...obj,
+      name: existing.name || obj.name,
+      description: existing.description || obj.description,
+      benefits: existing.benefits?.length > 0 ? existing.benefits : obj.benefits,
+      ingredients: existing.ingredients?.length > 0 ? existing.ingredients : obj.ingredients,
+      usageInstructions: existing.usageInstructions || obj.usageInstructions,
+      sideEffects: existing.sideEffects || obj.sideEffects,
+    };
+  }
+  const enData = {
+    name: obj.name,
+    description: obj.description,
+    benefits: obj.benefits || [],
+    ingredients: obj.ingredients || [],
+    usageInstructions: obj.usageInstructions || "",
+    sideEffects: obj.sideEffects || "",
+  };
+  const translated = await translateBatch(enData, lang);
+  try {
+    const dbProduct = await Product.findById(obj._id);
+    if (dbProduct) {
+      dbProduct.translations.set(lang, translated);
+      await dbProduct.save({ validateBeforeSave: false });
+    }
+  } catch {}
+  return {
+    ...obj,
+    name: translated.name || obj.name,
+    description: translated.description || obj.description,
+    benefits: translated.benefits?.length > 0 ? translated.benefits : obj.benefits,
+    ingredients: translated.ingredients?.length > 0 ? translated.ingredients : obj.ingredients,
+    usageInstructions: translated.usageInstructions || obj.usageInstructions,
+    sideEffects: translated.sideEffects || obj.sideEffects,
+  };
+};
+
+const localizeMany = async (products, lang = "en") => {
+  if (lang === "en") return products;
+  return Promise.all(products.map((p) => localize(p, lang)));
+};
 
 /* =========================
    GET ALL PRODUCTS
@@ -11,7 +93,7 @@ export const getProducts = async (req, res) => {
   try {
     const products = await Product.find().populate("goals", "name slug");
 
-    res.json(products);
+    res.json(await localizeMany(products, req.lang));
   } catch (error) {
     res.status(500).json({
       message: "Internal server error",
@@ -25,15 +107,11 @@ export const getProducts = async (req, res) => {
 
 export const getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
-
+    const product = await Product.findById(req.params.id).populate("goals", "name slug");
     if (!product) {
-      return res.status(404).json({
-        message: "Product not found",
-      });
+      return res.status(404).json({ message: "Product not found" });
     }
-
-    res.json(product);
+    res.json(await localize(product, req.lang));
   } catch (error) {
     res.status(500).json({
       message: "Internal server error",
@@ -91,6 +169,7 @@ export const createProduct = async (req, res) => {
       certifications: req.body.certifications || [],
       images: req.body.images || [],
       video: req.body.video || "",
+      translations: req.body.translations || {},
       isBestseller: req.body.isBestseller || false,
       isNewArrival: req.body.isNewArrival || false,
       herbalType: req.body.herbalType || "single",
@@ -198,6 +277,14 @@ export const updateProduct = async (req, res) => {
 
     if (req.body.hsnCode !== undefined) {
       product.hsnCode = req.body.hsnCode;
+    }
+
+    if (req.body.translations !== undefined) {
+      if (typeof req.body.translations === "object") {
+        for (const [lang, data] of Object.entries(req.body.translations)) {
+          product.translations.set(lang, data);
+        }
+      }
     }
 
     const updatedProduct = await product.save();
@@ -331,7 +418,7 @@ export const searchProducts = async (req, res) => {
       .limit(limit);
 
     res.json({
-      products,
+      products: await localizeMany(products, req.lang),
       page,
       pages: Math.ceil(total / limit),
       total,

@@ -20,7 +20,7 @@ function Journal() {
     <SEO title={t("journal.pageTitle")} />
     <div className="relative min-h-screen">
       <div className="fixed inset-0 z-0">
-        <img src="/images/productbackground.jpg" alt="" className="h-full w-full object-cover" />
+        <img src="/images/productbackground.webp" alt="" className="h-full w-full object-cover" />
         <div className="absolute inset-0 bg-white/20 dark:bg-black/20" />
       </div>
 
