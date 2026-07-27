@@ -6,8 +6,8 @@ const STARTUP_DELAY = 8000;
 
 export default function useAutoRefresh() {
   useEffect(() => {
-    const backendBase = import.meta.env.VITE_API_URL || "http://localhost:5000";
-    const url = `${backendBase}/api/events`;
+    const backendBase = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+    const url = `${backendBase}/events`;
     let eventSource;
     let timer;
     let delay = INITIAL_DELAY;

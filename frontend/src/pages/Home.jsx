@@ -134,7 +134,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2, type: "spring", stiffness: 100 }}
-            className="mb-4 font-serif text-4xl leading-tight md:text-7xl"
+            className="mb-4 font-serif text-3xl leading-tight md:text-6xl"
           >
             {t("home.heroTitle")}
           </motion.h1>
@@ -189,7 +189,7 @@ export default function Home() {
           <Picture
             src="/images/hero.jpg"
             alt={t("home.heroAlt")}
-            className="relative z-10 w-full max-w-[600px] rounded-[40px] object-cover shadow-2xl md:w-[800px] md:max-w-[800px]"
+            className="relative z-10 w-full max-w-[600px] rounded-[40px] object-cover shadow-2xl md:w-[560px] md:max-w-[560px]"
           />
         </motion.div>
       </section>

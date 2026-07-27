@@ -75,9 +75,18 @@ server.timeout = 30000;
 
 app.use(
   cors({
-    origin: config.nodeEnv === "production"
-      ? [config.frontendUrl]
-      : ["http://localhost:5173", "http://localhost:3000"],
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (config.nodeEnv !== "production") {
+        if (["http://localhost:5173", "http://localhost:3000"].includes(origin)) {
+          return callback(null, true);
+        }
+        return callback(null, false);
+      }
+      if (origin === config.frontendUrl) return callback(null, true);
+      if (origin.endsWith(".vercel.app")) return callback(null, true);
+      callback(null, false);
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
