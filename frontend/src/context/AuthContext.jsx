@@ -1,7 +1,5 @@
 import { createContext, useEffect, useState } from "react";
-import axios from "axios";
-
-axios.defaults.withCredentials = true;
+import api from "../services/api";
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext();
@@ -13,7 +11,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const { data } = await axios.get("/api/auth/profile");
+        const { data } = await api.get("/auth/profile");
         setUserInfo(data);
       } catch {
         setUserInfo(null);
@@ -25,7 +23,10 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const { data } = await axios.post("/api/auth/login", { email, password });
+      const { data } = await api.post("/auth/login", { email, password });
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+      }
       setUserInfo(data);
       return { success: true, user: data };
     } catch (error) {
@@ -38,7 +39,10 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (name, email, password) => {
     try {
-      const { data } = await axios.post("/api/auth/register", { name, email, password });
+      const { data } = await api.post("/auth/register", { name, email, password });
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+      }
       setUserInfo(data);
       return { success: true, user: data };
     } catch (error) {
@@ -51,7 +55,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await axios.post("/api/auth/logout");
+      await api.post("/auth/logout");
     } catch (err) { void err; }
     setUserInfo(null);
   };
