@@ -128,7 +128,7 @@ function ProductCard({
 
         <button
           onClick={handleCompare}
-          className="absolute right-10 top-2 z-10 rounded-full bg-white/80 p-2.5 shadow-sm backdrop-blur-sm transition hover:bg-white dark:bg-zinc-800/80 dark:hover:bg-zinc-800 min-h-[44px] min-w-[44px] flex items-center justify-center"
+          className="absolute right-14 top-2 z-10 rounded-full bg-white/80 p-2.5 shadow-sm backdrop-blur-sm transition hover:bg-white dark:bg-zinc-800/80 dark:hover:bg-zinc-800 min-h-[44px] min-w-[44px] flex items-center justify-center"
           title={inCompare ? "Remove from compare" : "Add to compare"}
         >
           <Scale

@@ -134,7 +134,7 @@ export default function Home() {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.2, type: "spring", stiffness: 100 }}
-            className="mb-4 font-serif text-3xl leading-tight md:text-6xl"
+            className="mb-4 font-serif text-3xl leading-tight md:text-7xl"
           >
             {t("home.heroTitle")}
           </motion.h1>
@@ -186,11 +186,16 @@ export default function Home() {
             transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
             className="absolute inset-0 scale-110 rounded-full bg-[#2d5c49]/20 blur-3xl"
           />
-          <Picture
-            src="/images/hero.jpg"
-            alt={t("home.heroAlt")}
-            className="relative z-10 w-full max-w-[600px] rounded-[40px] object-cover shadow-2xl md:w-[560px] md:max-w-[560px]"
-          />
+          <motion.div
+            animate={{ y: [0, -12, 0] }}
+            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <Picture
+              src="/images/hero.jpg"
+              alt={t("home.heroAlt")}
+              className="relative z-10 w-full max-w-[800px] rounded-[40px] object-cover shadow-2xl md:w-[650px] md:max-w-[650px]"
+            />
+          </motion.div>
         </motion.div>
       </section>
 
