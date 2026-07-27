@@ -154,18 +154,6 @@ app.use("/api/newsletter", newsletterRoutes);
 app.use("/", sitemapRoutes);
 
 /* ==========================
-   PRODUCTION STATIC SERVING
-   ========================== */
-
-if (config.nodeEnv === "production" && !config.frontendUrl) {
-  const frontendDist = path.join(__dirname, "../../frontend/dist");
-  app.use(express.static(frontendDist, { maxAge: "7d", etag: true }));
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(frontendDist, "index.html"));
-  });
-}
-
-/* ==========================
    404 HANDLER
    ========================== */
 
