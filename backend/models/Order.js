@@ -127,15 +127,32 @@ const orderSchema = new mongoose.Schema(
 
     refundStatus: {
       type: String,
-      enum: ["none", "requested", "approved", "completed"],
+      enum: ["none", "requested", "processing", "completed", "failed"],
       default: "none",
     },
+    refundId: String,
+    refundAmount: {
+      type: Number,
+      default: 0,
+    },
+    refundReason: String,
+    refundedAt: Date,
+    refundHistory: [
+      {
+        refundId: String,
+        amount: Number,
+        reason: String,
+        status: String,
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
 
     paymentResult: {
       id: String,
       orderId: String,
       signature: String,
     },
+    razorpayCustomerId: String,
   },
   {
     timestamps: true,

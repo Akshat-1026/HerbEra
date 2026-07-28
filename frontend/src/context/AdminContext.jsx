@@ -92,6 +92,14 @@ export const AdminProvider = ({ children }) => {
     setOrders((prev) => prev.filter((o) => o._id !== id));
   }, []);
 
+  const refundOrder = useCallback(async (orderId, amount, reason) => {
+    const { data } = await API.post(`/payment/refund/${orderId}`, { amount, reason });
+    if (data.order) {
+      setOrders((prev) => prev.map((o) => (o._id === orderId ? data.order : o)));
+    }
+    return data;
+  }, []);
+
   const fetchUsers = useCallback(async () => {
     const { data } = await API.get("/auth/users");
     setUsers(data);
@@ -255,7 +263,7 @@ export const AdminProvider = ({ children }) => {
   const value = {
     stats, products, orders, users, coupons, reviews, banners, combos, goals, loading,
     fetchStats, fetchProducts, createProduct, updateProduct, deleteProduct,
-    fetchOrders, updateOrderStatus, markOrderDelivered, markAsPaid, deleteOrder,
+    fetchOrders, updateOrderStatus, markOrderDelivered, markAsPaid, deleteOrder, refundOrder,
     fetchUsers, deleteUser, makeAdmin,
     fetchCoupons, createCoupon, deleteCoupon,
     fetchReviews, deleteReview,

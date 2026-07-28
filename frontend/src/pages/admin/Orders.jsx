@@ -4,7 +4,7 @@ import Table from "../../components/admin/Table";
 import Navbar from "../../components/admin/Navbar";
 import Sidebar from "../../components/admin/Sidebar";
 import { toast } from "react-toastify";
-import { Trash2, ChevronDown, Banknote, Eye, X, MapPin, User, Package, CreditCard, Truck } from "lucide-react";
+import { Trash2, ChevronDown, Banknote, Eye, X, MapPin, User, Package, CreditCard, Truck, RotateCcw, Loader2 } from "lucide-react";
 
 const nextStatuses = {
   pending: [{ value: "confirmed", label: "Confirmed" }],
@@ -22,13 +22,25 @@ const statusColors = {
   cancelled: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
 };
 
+const refundStatusColors = {
+  none: "",
+  requested: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+  processing: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
+  completed: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
+  failed: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
+};
+
 const Orders = () => {
-  const { orders, fetchOrders, updateOrderStatus, markAsPaid, deleteOrder } = useAdmin();
+  const { orders, fetchOrders, updateOrderStatus, markAsPaid, deleteOrder, refundOrder } = useAdmin();
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(null);
   const [payDropdownOpen, setPayDropdownOpen] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [detailOrder, setDetailOrder] = useState(null);
+  const [refundModal, setRefundModal] = useState(null);
+  const [refundAmount, setRefundAmount] = useState("");
+  const [refundReason, setRefundReason] = useState("");
+  const [refunding, setRefunding] = useState(false);
 
   const filtered = orders.filter((o) => {
     if (!searchQuery) return true;
@@ -78,6 +90,24 @@ const Orders = () => {
     }
   };
 
+  const handleRefund = async () => {
+    if (!refundModal) return;
+    setRefunding(true);
+    try {
+      const amt = refundAmount ? Number(refundAmount) : undefined;
+      const result = await refundOrder(refundModal._id, amt, refundReason);
+      toast.success(result.message || "Refund processed");
+      setRefundModal(null);
+      setRefundAmount("");
+      setRefundReason("");
+      fetchOrders();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Refund failed");
+    } finally {
+      setRefunding(false);
+    }
+  };
+
   const columns = [
     { key: "_id", label: "Order ID", render: (row) => <span className="font-mono text-xs">#{row._id?.slice(-8)}</span> },
     { key: "user", label: "Customer", render: (row) => row.user?.name || row.guestName || "Guest" },
@@ -103,6 +133,15 @@ const Orders = () => {
       return (
         <span className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${color}`}>
           {s}
+        </span>
+      );
+    }},
+    { key: "refundStatus", label: "Refund", render: (row) => {
+      if (!row.refundStatus || row.refundStatus === "none") return <span className="text-zinc-400">—</span>;
+      const color = refundStatusColors[row.refundStatus] || "";
+      return (
+        <span className={`px-2 py-0.5 rounded-full text-xs font-medium capitalize ${color}`}>
+          {row.refundStatus} {row.refundAmount ? `(₹${row.refundAmount.toLocaleString()})` : ""}
         </span>
       );
     }},
@@ -159,6 +198,15 @@ const Orders = () => {
                     )}
                   </div>
                 )}
+                {row.isPaid && row.paymentMethod === "Razorpay" && row.refundStatus !== "completed" && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setRefundModal(row); setRefundAmount(""); setRefundReason(""); }}
+                    className="p-1.5 text-zinc-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/30 rounded-lg transition-colors"
+                    title="Refund payment"
+                  >
+                    <RotateCcw size={16} />
+                  </button>
+                )}
                 {nextOpts && nextOpts.length > 0 && (
                   <div className="relative">
                     <button
@@ -209,6 +257,63 @@ const Orders = () => {
             </div>
           )}
 
+          {refundModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setRefundModal(null)}>
+              <div className="rounded-2xl bg-white shadow-xl dark:bg-zinc-900 w-full max-w-md mx-4" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-700 px-6 py-4">
+                  <div className="flex items-center gap-2">
+                    <RotateCcw size={18} className="text-amber-600" />
+                    <h3 className="text-lg font-semibold text-zinc-800 dark:text-zinc-100">Refund Payment</h3>
+                  </div>
+                  <button onClick={() => setRefundModal(null)} className="p-1.5 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">
+                    <X size={18} />
+                  </button>
+                </div>
+                <div className="p-6 space-y-4">
+                  <div className="rounded-xl bg-zinc-50 dark:bg-zinc-800 p-4 text-sm">
+                    <p className="text-zinc-500">Order Total</p>
+                    <p className="text-lg font-bold text-zinc-800 dark:text-zinc-100">₹{refundModal.totalPrice?.toLocaleString()}</p>
+                    {refundModal.refundAmount > 0 && (
+                      <p className="text-xs text-amber-600 mt-1">Already refunded: ₹{refundModal.refundAmount.toLocaleString()}</p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Refund Amount (₹)</label>
+                    <input
+                      type="number"
+                      value={refundAmount}
+                      onChange={(e) => setRefundAmount(e.target.value)}
+                      placeholder={`Full: ₹${refundModal.totalPrice - (refundModal.refundAmount || 0)}`}
+                      className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 dark:text-white"
+                    />
+                    <p className="text-xs text-zinc-400 mt-1">Leave empty for full refund</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Reason</label>
+                    <textarea
+                      value={refundReason}
+                      onChange={(e) => setRefundReason(e.target.value)}
+                      rows={3}
+                      placeholder="Reason for refund..."
+                      className="w-full rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 dark:text-white resize-none"
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-3 px-6 pb-6">
+                  <button onClick={() => setRefundModal(null)} className="px-4 py-2 text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">Cancel</button>
+                  <button
+                    onClick={handleRefund}
+                    disabled={refunding}
+                    className="px-5 py-2 text-sm font-medium bg-amber-600 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50 transition-colors flex items-center gap-2"
+                  >
+                    {refunding && <Loader2 size={16} className="animate-spin" />}
+                    {refunding ? "Processing..." : "Process Refund"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {detailOrder && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setDetailOrder(null)}>
               <div className="rounded-2xl bg-white shadow-xl dark:bg-zinc-900 w-full max-w-2xl mx-4 max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
@@ -223,7 +328,6 @@ const Orders = () => {
                 </div>
 
                 <div className="p-6 space-y-6">
-                  {/* Shipping Address */}
                   <div className="rounded-xl border border-zinc-200 dark:border-zinc-700 p-4">
                     <div className="flex items-center gap-2 mb-3">
                       <MapPin size={16} className="text-[#2d5c49] dark:text-emerald-400" />
@@ -241,7 +345,6 @@ const Orders = () => {
                     )}
                   </div>
 
-                  {/* Customer Info */}
                   <div className="rounded-xl border border-zinc-200 dark:border-zinc-700 p-4">
                     <div className="flex items-center gap-2 mb-3">
                       <User size={16} className="text-[#2d5c49] dark:text-emerald-400" />
@@ -253,7 +356,6 @@ const Orders = () => {
                     </div>
                   </div>
 
-                  {/* Order Status & Timeline */}
                   <div className="rounded-xl border border-zinc-200 dark:border-zinc-700 p-4">
                     <div className="flex items-center gap-2 mb-3">
                       <Truck size={16} className="text-[#2d5c49] dark:text-emerald-400" />
@@ -300,7 +402,6 @@ const Orders = () => {
                     )}
                   </div>
 
-                  {/* Items */}
                   <div className="rounded-xl border border-zinc-200 dark:border-zinc-700 p-4">
                     <div className="flex items-center gap-2 mb-3">
                       <Package size={16} className="text-[#2d5c49] dark:text-emerald-400" />
@@ -321,7 +422,6 @@ const Orders = () => {
                     </div>
                   </div>
 
-                  {/* Payment Summary */}
                   <div className="rounded-xl border border-zinc-200 dark:border-zinc-700 p-4">
                     <div className="flex items-center gap-2 mb-3">
                       <CreditCard size={16} className="text-[#2d5c49] dark:text-emerald-400" />
@@ -368,6 +468,26 @@ const Orders = () => {
                         <span>Paid</span>
                         <span>{detailOrder.isPaid ? `Yes (${new Date(detailOrder.paidAt).toLocaleDateString()})` : "No"}</span>
                       </div>
+                      {detailOrder.refundStatus && detailOrder.refundStatus !== "none" && (
+                        <>
+                          <div className="flex justify-between pt-1 text-amber-600 dark:text-amber-400">
+                            <span>Refund Status</span>
+                            <span className="capitalize">{detailOrder.refundStatus}</span>
+                          </div>
+                          {detailOrder.refundAmount > 0 && (
+                            <div className="flex justify-between text-amber-600 dark:text-amber-400">
+                              <span>Refund Amount</span>
+                              <span>₹{detailOrder.refundAmount.toLocaleString()}</span>
+                            </div>
+                          )}
+                          {detailOrder.refundedAt && (
+                            <div className="flex justify-between text-zinc-500 dark:text-zinc-400">
+                              <span>Refunded On</span>
+                              <span>{new Date(detailOrder.refundedAt).toLocaleDateString()}</span>
+                            </div>
+                          )}
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
