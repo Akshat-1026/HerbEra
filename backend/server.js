@@ -54,7 +54,21 @@ const server = http.createServer(app);
    SECURITY & PERFORMANCE
    ========================== */
 
-app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://checkout.razorpay.com"],
+      frameSrc: ["'self'", "https://api.razorpay.com"],
+      frameAncestors: ["'self'"],
+      connectSrc: ["'self'", "https://api.razorpay.com"],
+      imgSrc: ["'self'", "data:", "https:"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      formAction: ["'self'", "https://api.razorpay.com"],
+    },
+  },
+}));
 app.use(compression({ level: 6, threshold: 1024, filter: (req, res) => {
   if (req.headers["x-no-compression"]) return false;
   return compression.filter(req, res);
