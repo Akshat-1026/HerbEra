@@ -36,7 +36,7 @@ function MyOrders() {
 
   useEffect(() => {
     setLoading(true); // eslint-disable-line react-hooks/set-state-in-effect
-    axios.get("/api/orders/myorders")
+    axios.get(`${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/orders/myorders`)
       .then(({ data }) => setOrders(data))
       .catch(() => toast.error(t("myOrders.errorLoad")))
       .finally(() => setLoading(false));
@@ -52,7 +52,7 @@ function MyOrders() {
   const handleCancel = async (orderId) => {
     if (!confirm(t("myOrders.cancelConfirm"))) return;
     try {
-      await axios.put(`/api/orders/${orderId}/cancel`, { reason: "Cancelled by user" });
+      await axios.put(`${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/orders/${orderId}/cancel`, { reason: "Cancelled by user" });
       setOrders((prev) => prev.map((o) => o._id === orderId ? { ...o, status: "cancelled", timeline: [...(o.timeline || []), { status: "cancelled", date: new Date(), note: "Cancelled by user" }] } : o));
       toast.success(t("myOrders.orderCancelled"));
     } catch {

@@ -3,6 +3,7 @@
 import { createContext, useContext, useState } from "react";
 import axios from "axios";
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 const OrderContext = createContext();
 
 export const OrderProvider = ({ children }) => {
@@ -17,8 +18,9 @@ export const OrderProvider = ({ children }) => {
       setLoading(true);
 
       const { data } = await axios.post(
-        "/api/orders",
-        orderData
+        `${API}/orders`,
+        orderData,
+        { withCredentials: true }
       );
 
       setOrders((prev) => [...prev, data.order || data]);
@@ -49,7 +51,8 @@ export const OrderProvider = ({ children }) => {
       setLoading(true);
 
       const { data } = await axios.get(
-        "/api/orders/myorders"
+        `${API}/orders/myorders`,
+        { withCredentials: true }
       );
 
       setOrders(data);

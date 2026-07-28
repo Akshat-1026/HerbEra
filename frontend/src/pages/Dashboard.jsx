@@ -9,6 +9,8 @@ import { useTranslation } from "react-i18next";
 import SEO from "../components/SEO";
 import { useCurrency } from "../context/CurrencyContext";
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 const fadeUp = (delay = 0) => ({
   initial: { opacity: 0, y: 20 },
   whileInView: { opacity: 1, y: 0 },
@@ -44,7 +46,7 @@ function Dashboard() {
 
   useEffect(() => {
     setLoading(true); // eslint-disable-line react-hooks/set-state-in-effect
-    axios.get("/api/auth/profile").then(({ data }) => {
+    axios.get(`${API}/auth/profile`, { withCredentials: true }).then(({ data }) => {
       setProfile(data);
       setForm({ name: data.name || "", email: data.email || "", phone: data.phone || "" });
       setAddresses(data.addresses || []);
@@ -53,12 +55,12 @@ function Dashboard() {
 
   useEffect(() => {
     if (activeTab !== "orders") return;
-    axios.get("/api/orders/myorders").then(({ data }) => setOrders(data)).catch(() => {});
+    axios.get(`${API}/orders/myorders`, { withCredentials: true }).then(({ data }) => setOrders(data)).catch(() => {});
   }, [activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSaveProfile = async () => {
     try {
-      const { data } = await axios.put("/api/auth/profile", form);
+      const { data } = await axios.put(`${API}/auth/profile`, form, { withCredentials: true });
       setProfile(data);
       setEditing(false);
       toast.success(t("dashboard.profileUpdated"));
@@ -70,7 +72,7 @@ function Dashboard() {
       ? addresses.map((a, i) => i === editingAddress ? addressForm : a)
       : [...addresses, addressForm];
     try {
-      const { data } = await axios.put("/api/auth/profile", { addresses: updated });
+      const { data } = await axios.put(`${API}/auth/profile`, { addresses: updated }, { withCredentials: true });
       setAddresses(data.addresses || updated);
       setShowAddressForm(false);
       setEditingAddress(null);
@@ -82,7 +84,7 @@ function Dashboard() {
   const handleDeleteAddress = async (index) => {
     const updated = addresses.filter((_, i) => i !== index);
     try {
-      await axios.put("/api/auth/profile", { addresses: updated });
+      await axios.put(`${API}/auth/profile`, { addresses: updated }, { withCredentials: true });
       setAddresses(updated);
       toast.success(t("dashboard.addressDeleted"));
     } catch { toast.error(t("dashboard.errorDeleteAddress")); }
@@ -91,7 +93,7 @@ function Dashboard() {
   const handleSetDefaultAddress = async (index) => {
     const updated = addresses.map((a, i) => ({ ...a, isDefault: i === index }));
     try {
-      await axios.put("/api/auth/profile", { addresses: updated });
+      await axios.put(`${API}/auth/profile`, { addresses: updated }, { withCredentials: true });
       setAddresses(updated);
       toast.success(t("dashboard.defaultAddressSet"));
     } catch { toast.error(t("dashboard.errorUpdate")); }
@@ -105,7 +107,7 @@ function Dashboard() {
       return toast.error(t("dashboard.passwordMinLength"));
     }
     try {
-      await axios.put("/api/auth/profile", { password: passwordForm.newPassword });
+      await axios.put(`${API}/auth/profile`, { password: passwordForm.newPassword }, { withCredentials: true });
       setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
       toast.success(t("dashboard.passwordChanged"));
     } catch { toast.error(t("dashboard.errorChangePassword")); }
