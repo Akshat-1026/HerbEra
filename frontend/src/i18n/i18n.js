@@ -5,11 +5,9 @@ import LanguageDetector from "i18next-browser-languagedetector";
 import en from "./locales/en.json";
 import hi from "./locales/hi.json";
 import de from "./locales/de.json";
-import ja from "./locales/ja.json";
 import fr from "./locales/fr.json";
 import es from "./locales/es.json";
 import zh from "./locales/zh.json";
-import ar from "./locales/ar.json";
 
 i18n
   .use(LanguageDetector)
@@ -19,11 +17,9 @@ i18n
       en: { translation: en },
       hi: { translation: hi },
       de: { translation: de },
-      ja: { translation: ja },
       fr: { translation: fr },
       es: { translation: es },
       zh: { translation: zh },
-      ar: { translation: ar },
     },
     fallbackLng: "en",
     debug: import.meta.env.DEV,
