@@ -2,11 +2,12 @@ import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link, useSearchParams } from "react-router-dom";
 import axios from "axios";
+import { toast } from "react-toastify";
 import {
   PackageSearch, Check, X, Clock, Truck,
   Package, MapPin, CreditCard,
   AlertTriangle, Calendar, Hash, IndianRupee,
-  Loader2, ChevronRight
+  Loader2, ChevronRight, RotateCcw
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import SEO from "../components/SEO";
@@ -65,6 +66,7 @@ function TrackOrder() {
   const [error, setError] = useState("");
   const [cancelling, setCancelling] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [retryingPayment, setRetryingPayment] = useState(false);
 
   const handleTrack = async (num) => {
     const tn = num || trackingNumber;
@@ -122,6 +124,66 @@ function TrackOrder() {
       setError(t("trackOrder.errorCancel"));
     } finally {
       setCancelling(false);
+    }
+  };
+
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      if (window.Razorpay) return resolve(true);
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const handleRetryPayment = async () => {
+    if (!order) return;
+    setRetryingPayment(true);
+    try {
+      const loaded = await loadRazorpayScript();
+      if (!loaded) {
+        toast.error("Payment gateway failed to load");
+        return;
+      }
+
+      const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+      const { data } = await axios.post(`${API}/payment/retry`, { orderId: order._id }, { withCredentials: true });
+
+      const options = {
+        key: data.key,
+        amount: data.amount,
+        currency: data.currency,
+        name: "Herb-Era",
+        description: `Order #${order.trackingNumber}`,
+        order_id: data.id,
+        theme: { color: "#15803d" },
+        handler: async function (response) {
+          try {
+            await axios.post(`${API}/payment/verify`, {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              orderId: order._id,
+            }, { withCredentials: true });
+            toast.success("Payment successful!");
+            setOrder(prev => ({ ...prev, isPaid: true, paidAt: new Date().toISOString() }));
+          } catch {
+            toast.error("Payment verification failed. Contact support.");
+          }
+        },
+        modal: {
+          ondismiss: () => toast.info("Payment cancelled"),
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to initiate payment retry");
+    } finally {
+      setRetryingPayment(false);
     }
   };
 
@@ -424,6 +486,39 @@ function TrackOrder() {
                     <p className="text-sm font-medium text-zinc-800 dark:text-white capitalize">
                       {order.paymentMethod}
                     </p>
+                  </div>
+                )}
+                {!order.isPaid && order.paymentMethod === "Razorpay" && (
+                  <div className="flex items-center gap-3 pt-2">
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300">
+                      Payment Pending
+                    </span>
+                    <button
+                      onClick={handleRetryPayment}
+                      disabled={retryingPayment}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+                    >
+                      {retryingPayment ? <Loader2 size={14} className="animate-spin" /> : <RotateCcw size={14} />}
+                      {retryingPayment ? "Loading..." : "Retry Payment"}
+                    </button>
+                  </div>
+                )}
+                {order.isPaid && order.paymentMethod === "Razorpay" && (
+                  <div className="flex items-center gap-2 pt-2">
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
+                      Paid {order.paidAt ? `on ${new Date(order.paidAt).toLocaleDateString()}` : ""}
+                    </span>
+                  </div>
+                )}
+                {order.refundStatus && order.refundStatus !== "none" && (
+                  <div className="pt-2 space-y-1">
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      order.refundStatus === "completed" ? "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300" :
+                      order.refundStatus === "failed" ? "bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300" :
+                      "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300"
+                    }`}>
+                      Refund {order.refundStatus} {order.refundAmount ? `(₹${order.refundAmount.toLocaleString()})` : ""}
+                    </span>
                   </div>
                 )}
               </div>
