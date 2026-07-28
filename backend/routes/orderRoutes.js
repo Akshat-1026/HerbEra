@@ -13,6 +13,7 @@ import {
   getOrderByTracking,
   deleteOrder,
   downloadInvoice,
+  calculatePricing,
 } from "../controllers/orderController.js";
 
 const router = express.Router();
@@ -41,6 +42,10 @@ router.get("/admin", protect, admin, getAllOrders);
 /* =========================
    PUBLIC ROUTES
    ========================= */
+
+// @route   POST /api/orders/calculate-pricing
+// 🔥 Placed ABOVE /:id so Express doesn't mistake "calculate-pricing" for an ID
+router.post("/calculate-pricing", calculatePricing);
 
 // @route   GET /api/orders/track/:trackingNumber
 // 🔥 Placed ABOVE /:id so Express doesn't mistake "track" for an ID

@@ -23,6 +23,8 @@ function Checkout() {
 
   const [loading, setLoading] = useState(false);
   const [couponInput, setCouponInput] = useState("");
+  const [serverPricing, setServerPricing] = useState(null);
+  const [pricingLoading, setPricingLoading] = useState(false);
 
   const [formData, setFormData] = useState({
     name: userInfo?.name || "",
@@ -44,6 +46,37 @@ function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState("razorpay");
 
   const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  useEffect(() => {
+    if (cart.length === 0) { setServerPricing(null); return; }
+
+    const fetchPricing = async () => {
+      setPricingLoading(true);
+      try {
+        const orderItems = cart.map((item) => ({
+          product: item._id,
+          name: item.name,
+          price: item.price,
+          qty: item.qty,
+          image: item.image || "",
+          sku: item.sku || "",
+          selectedVariant: item.selectedVariant || undefined,
+        }));
+        const { data } = await axios.post(`${API}/orders/calculate-pricing`, {
+          orderItems,
+          couponCode: couponCode || undefined,
+        });
+        setServerPricing(data);
+      } catch {
+        setServerPricing(null);
+      } finally {
+        setPricingLoading(false);
+      }
+    };
+
+    const timer = setTimeout(fetchPricing, 300);
+    return () => clearTimeout(timer);
+  }, [cart, couponCode, discount]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const validateForm = () => {
     if (!formData.name || !formData.phone || !formData.address || !formData.city || !formData.state || !formData.pincode) {
@@ -168,12 +201,12 @@ function Checkout() {
     }
   };
 
-  const subtotal = totalPrice;
-  const couponDiscountValue = subtotal * (discount / 100);
-  const afterCoupon = subtotal - couponDiscountValue;
-  const shipping = afterCoupon >= 500 ? 0 : 49;
-  const gst = afterCoupon * 0.05;
-  const finalTotal = afterCoupon + shipping + gst;
+  const subtotal = serverPricing?.subtotal ?? totalPrice;
+  const couponDiscountValue = serverPricing?.discountAmount ?? (subtotal * (discount / 100));
+  const afterCoupon = serverPricing?.afterDiscount ?? (subtotal - couponDiscountValue);
+  const shipping = serverPricing?.shippingPrice ?? (afterCoupon >= 500 ? 0 : 49);
+  const gst = serverPricing?.gstAmount ?? (afterCoupon * 0.05);
+  const finalTotal = serverPricing?.total ?? (afterCoupon + shipping + gst);
 
   return (
     <>
@@ -332,13 +365,18 @@ function Checkout() {
 
                 <button
                   onClick={handlePlaceOrder}
-                  disabled={loading}
+                  disabled={loading || pricingLoading}
                   className="w-full mt-6 bg-green-600 hover:bg-green-700 text-white py-4 rounded-xl font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed text-base"
                 >
                   {loading ? (
                     <span className="flex items-center justify-center gap-2">
                       <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       {t("checkout.processing")}
+                    </span>
+                  ) : pricingLoading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Calculating...
                     </span>
                   ) : (
                     `${t("checkout.placeOrder")} ${formatPrice(finalTotal)}`

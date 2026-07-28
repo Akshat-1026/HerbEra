@@ -14,6 +14,73 @@ const generateInvoiceNumber = (count) => {
   return `HE-${ym}-${String(count + 1).padStart(4, "0")}`;
 };
 
+/* ================= CALCULATE PRICING (Preview) ================= */
+
+export const calculatePricing = async (req, res) => {
+  try {
+    const { orderItems, couponCode: clientCouponCode } = req.body;
+
+    if (!orderItems || orderItems.length === 0) {
+      return res.status(400).json({ message: "No order items" });
+    }
+
+    const productIds = orderItems.map((item) => item.product || item._id);
+    const dbProducts = await Product.find({ _id: { $in: productIds } });
+    const productMap = new Map(dbProducts.map((p) => [p._id.toString(), p]));
+
+    let subtotal = 0;
+    for (const item of orderItems) {
+      const dbProduct = productMap.get((item.product || item._id).toString());
+      if (!dbProduct) {
+        return res.status(400).json({ message: `Product not found: ${item.name}` });
+      }
+
+      let unitPrice;
+      if (item.selectedVariant?.label && dbProduct.variants?.length) {
+        const variant = dbProduct.variants.find((v) => v.label === item.selectedVariant.label);
+        if (!variant) return res.status(400).json({ message: `Variant "${item.selectedVariant.label}" not found` });
+        unitPrice = variant.price;
+      } else {
+        unitPrice = dbProduct.price;
+      }
+
+      subtotal += unitPrice * item.qty;
+    }
+
+    let discountAmount = 0;
+    let couponDoc = null;
+    if (clientCouponCode) {
+      couponDoc = await Coupon.findOne({ code: clientCouponCode.toUpperCase() });
+      if (couponDoc && couponDoc.isActive && new Date(couponDoc.expiry) >= new Date()) {
+        discountAmount = Math.round(subtotal * (couponDoc.discount / 100));
+      }
+    }
+
+    const afterDiscount = subtotal - discountAmount;
+
+    const shippingPrice = afterDiscount >= config.shippingFreeAbove ? 0 : config.shippingCharged;
+
+    const gstRate = config.gstRate;
+    const gstAmount = Math.round(afterDiscount * (gstRate / 100));
+    const halfGst = Math.round(gstAmount / 2);
+
+    res.json({
+      subtotal,
+      discountAmount,
+      couponCode: couponDoc?.code || null,
+      discountPercent: couponDoc?.discount || 0,
+      afterDiscount,
+      shippingPrice,
+      gstRate,
+      gstAmount,
+      gstBreakdown: { cgst: halfGst, sgst: gstAmount - halfGst, igst: 0 },
+      total: afterDiscount + shippingPrice + gstAmount,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 /* ================= CREATE ORDER ================= */
 
 export const createOrder = async (req, res) => {
