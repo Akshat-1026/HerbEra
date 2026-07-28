@@ -170,6 +170,7 @@ function Checkout() {
         qty: item.qty,
         image: item.image || "",
         sku: item.sku || "",
+        selectedVariant: item.selectedVariant || undefined,
       }));
 
       const orderData = {
