@@ -76,7 +76,7 @@ function Checkout() {
     }
 
     try {
-      const { data } = await axios.post(`${API}/payment/create-order`, { orderId: savedOrder._id });
+      const { data } = await axios.post(`${API}/payment/create-order`, { orderId: savedOrder._id }, { withCredentials: true });
 
       const options = {
         key: data.key,
@@ -94,7 +94,7 @@ function Checkout() {
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
               orderId: savedOrder._id,
-            });
+            }, { withCredentials: true });
             clearCart();
             toast.success(t("checkout.paymentSuccessful"));
             navigate(`/track-order?tracking=${savedOrder.trackingNumber}`);
@@ -152,7 +152,7 @@ function Checkout() {
         couponCode: couponCode || undefined,
       };
 
-      const { data: savedOrder } = await axios.post(`${API}/orders`, orderData);
+      const { data: savedOrder } = await axios.post(`${API}/orders`, orderData, { withCredentials: true });
 
       if (paymentMethod === "razorpay" && RAZORPAY_KEY) {
         await handleRazorpayPayment(savedOrder);

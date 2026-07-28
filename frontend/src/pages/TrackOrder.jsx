@@ -117,7 +117,7 @@ function TrackOrder() {
     if (!order) return;
     setCancelling(true);
     try {
-      await axios.put(`${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/orders/${order._id}/cancel`);
+      await axios.put(`${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/orders/${order._id}/cancel`, {}, { withCredentials: true });
       setOrder(prev => ({ ...prev, status: "cancelled" }));
       setShowCancelConfirm(false);
     } catch {
