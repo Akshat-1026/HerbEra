@@ -3,6 +3,7 @@ import axios from "axios";
 import Navbar from "../../components/admin/Navbar";
 import Sidebar from "../../components/admin/Sidebar";
 import { Plus, Trash2 } from "lucide-react";
+import ImageUpload from "../../components/admin/ImageUpload";
 import { toast } from "react-toastify";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
@@ -120,13 +121,7 @@ const OurStory = () => {
                     <input value={form.ctaLink} onChange={(e) => setForm({ ...form, ctaLink: e.target.value })} placeholder="/products" className={inputClass} />
                   </div>
                 </div>
-                <div>
-                  <label className={labelClass}>Image URL</label>
-                  <input value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} placeholder="https://..." className={inputClass} />
-                </div>
-                {form.image && (
-                  <img src={form.image} alt={form.imageAlt} className="h-40 rounded-xl object-cover" />
-                )}
+                <ImageUpload value={form.image} onChange={(image) => setForm({ ...form, image })} label="Image" width={1200} height={800} hint="Recommended size 1200×800" />
                 <div>
                   <label className={labelClass}>Image Alt Text</label>
                   <input value={form.imageAlt} onChange={(e) => setForm({ ...form, imageAlt: e.target.value })} className={inputClass} />

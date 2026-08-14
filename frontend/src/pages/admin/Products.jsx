@@ -6,6 +6,7 @@ import Navbar from "../../components/admin/Navbar";
 import Sidebar from "../../components/admin/Sidebar";
 import { Plus, Globe } from "lucide-react";
 import { ProductVariants } from "../../components/admin/ProductVariants";
+import ImageUpload from "../../components/admin/ImageUpload";
 import { toast } from "react-toastify";
 
 const LANGUAGES = [
@@ -163,10 +164,7 @@ const Products = () => {
               </div>
             </div>
             <ProductVariants variants={form.variants} onChange={(variants) => setForm({ ...form, variants })} />
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Image URL</label>
-              <input value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} className="w-full border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-zinc-800 dark:text-white" />
-            </div>
+            <ImageUpload value={form.image} onChange={(image) => setForm({ ...form, image })} label="Image" width={800} height={800} hint="Recommended size 800×800" />
             <div>
               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Description</label>
               <textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-zinc-800 dark:text-white" required />

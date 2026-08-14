@@ -5,6 +5,7 @@ import Modal from "../../components/admin/Modal";
 import Navbar from "../../components/admin/Navbar";
 import Sidebar from "../../components/admin/Sidebar";
 import { Plus } from "lucide-react";
+import ImageUpload from "../../components/admin/ImageUpload";
 import { toast } from "react-toastify";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
@@ -122,10 +123,7 @@ const Testimonials = () => {
               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Rating (1-5)</label>
               <input type="number" min="1" max="5" value={form.rating} onChange={(e) => setForm({ ...form, rating: parseInt(e.target.value) || 5 })} className="w-full border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-zinc-800 dark:text-white" />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Customer Photo URL (optional)</label>
-              <input value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} placeholder="https://..." className="w-full border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-zinc-800 dark:text-white" />
-            </div>
+            <ImageUpload value={form.image} onChange={(image) => setForm({ ...form, image })} label="Customer Photo" width={400} height={400} hint="Recommended size 400×400" />
             <div>
               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Video URL (optional)</label>
               <input value={form.video} onChange={(e) => setForm({ ...form, video: e.target.value })} placeholder="YouTube / Vimeo / MP4 link" className="w-full border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-zinc-800 dark:text-white" />

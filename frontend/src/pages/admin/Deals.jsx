@@ -5,6 +5,7 @@ import Modal from "../../components/admin/Modal";
 import Navbar from "../../components/admin/Navbar";
 import Sidebar from "../../components/admin/Sidebar";
 import { Plus } from "lucide-react";
+import ImageUpload from "../../components/admin/ImageUpload";
 import { toast } from "react-toastify";
 
 const DEAL_TYPES = ["flash_sale", "daily_deal", "combo", "bogo", "festival"];
@@ -193,10 +194,7 @@ const Deals = () => {
                 <input type="datetime-local" value={form.endsAt} onChange={(e) => setForm({ ...form, endsAt: e.target.value })} className="w-full border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-zinc-800 dark:text-white" required />
               </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Banner Image URL</label>
-              <input value={form.bannerImage} onChange={(e) => setForm({ ...form, bannerImage: e.target.value })} className="w-full border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-zinc-800 dark:text-white" placeholder="https://..." />
-            </div>
+            <ImageUpload value={form.bannerImage} onChange={(bannerImage) => setForm({ ...form, bannerImage })} label="Banner Image" width={1600} height={600} hint="Recommended size 1600×600" />
             <div>
               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Products</label>
               <div className="max-h-32 overflow-y-auto border border-zinc-300 dark:border-zinc-600 rounded-lg p-2 space-y-1">

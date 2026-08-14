@@ -5,6 +5,7 @@ import Modal from "../../components/admin/Modal";
 import Navbar from "../../components/admin/Navbar";
 import Sidebar from "../../components/admin/Sidebar";
 import { Plus } from "lucide-react";
+import ImageUpload from "../../components/admin/ImageUpload";
 import { toast } from "react-toastify";
 
 const slugify = (str) => str.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -150,10 +151,7 @@ const Blogs = () => {
                 <input value={form.author} onChange={(e) => setForm({ ...form, author: e.target.value })} className="w-full border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-zinc-800 dark:text-white" />
               </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Image URL</label>
-              <input value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} className="w-full border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-zinc-800 dark:text-white" required placeholder="https://..." />
-            </div>
+            <ImageUpload value={form.image} onChange={(image) => setForm({ ...form, image })} label="Image" width={1200} height={630} required hint="Recommended size 1200×630" />
             <div>
               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">Excerpt</label>
               <textarea value={form.excerpt} onChange={(e) => setForm({ ...form, excerpt: e.target.value })} className="w-full border border-zinc-300 dark:border-zinc-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-zinc-800 dark:text-white" rows={2} required placeholder="Short summary of the article..." />
