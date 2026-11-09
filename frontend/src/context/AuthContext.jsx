@@ -1,5 +1,6 @@
 import { createContext, useEffect, useState } from "react";
 import api from "../services/api";
+import Loader from "../components/Loader";
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const AuthContext = createContext();
@@ -72,7 +73,7 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated: !!userInfo,
       }}
     >
-      {!loading && children}
+      {loading ? <Loader size="lg" fullScreen /> : children}
     </AuthContext.Provider>
   );
 };
